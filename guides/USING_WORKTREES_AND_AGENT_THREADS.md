@@ -31,6 +31,17 @@ Quick findings for using Codex threads with git worktrees.
 - Deleting a worktree does not delete committed branch history.
 - Uncommitted changes in a deleted worktree are lost.
 
+## Broken Thread Context After Worktree Deletion
+
+- If a thread's attached worktree path is deleted, thread UI actions can break.
+- Typical broken UI actions: `handoff to local`, `branch here`, worktree-aware branch widgets.
+- Conversation still works, but workspace-aware UI controls may fail because their anchor path is gone.
+- Agent shell commands can still work only if a valid `workdir` is set explicitly.
+- Practical recovery: start a new thread in a valid repo path (or fork from a valid thread/workspace) and continue there.
+- Keep deleted-path threads as read-only history, then archive them.
+- Prevention: never delete a worktree that still has an active thread attached.
+- Clean worktrees only when the related thread is done and ready to be archived.
+
 ## Recommended Team Workflow
 
 1. Start from main project workspace.
