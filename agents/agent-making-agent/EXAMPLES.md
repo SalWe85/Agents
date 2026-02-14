@@ -8,7 +8,8 @@ Use these as starting points. Review them carefully and adapt goals, inputs, and
 ```text
 Agent: agent-making-agent
 Goal: New agent to create: test-plan-agent
-Inputs: Use /guides/AGENT_MAKING_INSTRUCTIONS.md and current standards.
+Inputs: Use /agents/agent-making-agent/README.md as the standards source.
+Inputs: Additional context: focus test plans on API and DB changes.
 Constraints: Documentation only, no code edits.
 Output: three files in the new agent folder: README.md + USAGE_TEMPLATE.md + EXAMPLES.md
 ```
@@ -27,7 +28,7 @@ EXAMPLES.md has at least two diverse input/output examples and adaptation guidan
 ```text
 Agent: agent-making-agent
 Goal: Upgrade /agents/deployment-agent/ to match current standards.
-Inputs: Existing files in /agents/deployment-agent/ and /guides/AGENT_MAKING_INSTRUCTIONS.md.
+Inputs: Existing files in /agents/deployment-agent/ and /agents/agent-making-agent/README.md.
 Constraints: Keep original mission intact; only documentation changes.
 Output: three-file compliant package for deployment-agent.
 ```

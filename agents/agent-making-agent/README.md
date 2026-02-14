@@ -1,6 +1,6 @@
 # Agent Making Agent
 
-Last Updated: 2026-02-14 12:47 CET
+Last Updated: 2026-02-14 12:54 CET
 
 ## Mission
 Define and enforce a minimum quality standard for every new agent in this repository.
@@ -18,8 +18,10 @@ Define and enforce a minimum quality standard for every new agent in this reposi
 
 ## Inputs
 - Required:
-  - Candidate agent README content
-  - Agent folder path under `agents/`
+  - Candidate agent folder path under `agents/`
+  - Candidate `README.md` content
+  - Candidate `USAGE_TEMPLATE.md` content
+  - Candidate `EXAMPLES.md` content
 - Optional:
   - Relevant project constraints
   - Preferred output format for scoring feedback
@@ -48,6 +50,8 @@ Define and enforce a minimum quality standard for every new agent in this reposi
 9. If failing, provide targeted revision actions and re-run scoring after edits.
 
 ## Constraints
+- Canonical standards source for agent creation/review is this file: `/agents/agent-making-agent/README.md`.
+- `AGENT_MAKING_INSTRUCTIONS.md` is a human guidebook, not a normative standards source for agents.
 - Do not approve agents missing required sections.
 - Do not approve agents that hide or omit rubric output.
 - Do not approve agents without a top-of-file freshness timestamp.

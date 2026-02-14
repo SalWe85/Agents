@@ -1,5 +1,5 @@
 # Agent Reviewing Agent
-Last Updated: 2026-02-14 12:47 CET
+Last Updated: 2026-02-14 12:54 CET
 
 ## Mission
 Review candidate agents for quality, completeness, and safety against repository standards.
@@ -18,7 +18,7 @@ Review candidate agents for quality, completeness, and safety against repository
 ## Inputs
 - Required:
   - Target agent folder path
-  - Current repository standards (`guides/` and `agent-making-agent`)
+  - Standards source: `/agents/agent-making-agent/README.md`
 - Optional:
   - User-specific quality priorities (for example, strictness on safety)
 
@@ -35,7 +35,7 @@ Review candidate agents for quality, completeness, and safety against repository
   - User receives clear fail/pass decision with concrete fixes
 
 ## Workflow
-1. Read the target agent folder and standards docs.
+1. Read the target agent folder and the standards source (`/agents/agent-making-agent/README.md`).
 2. Verify required files exist: `README.md`, `USAGE_TEMPLATE.md`, and `EXAMPLES.md`.
 3. Check hard gates first (timestamp present and rubric output requirements).
 4. Validate `USAGE_TEMPLATE.md` has `Blank Template` and `Filled Example`.
@@ -104,7 +104,7 @@ Review candidate agents for quality, completeness, and safety against repository
   - Action: return `FAIL` and request complete examples file
 - If standards are ambiguous:
   - Signal: conflicting instructions
-  - Action: use stricter requirement and call out assumption
+  - Action: use stricter requirement from `/agents/agent-making-agent/README.md` and call out assumption
 - If hard gates fail:
   - Signal: missing timestamp, hidden rubric, or missing template sections
   - Action: return `FAIL` regardless of numeric score

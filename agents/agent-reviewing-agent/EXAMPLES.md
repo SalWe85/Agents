@@ -8,7 +8,7 @@ Use these as starting points. Review them carefully and adapt paths, standards, 
 ```text
 Agent: agent-reviewing-agent
 Goal: Review /agents/new-agent/ for standards compliance.
-Inputs: Use /guides/AGENT_MAKING_INSTRUCTIONS.md and /agents/agent-making-agent/README.md as standards.
+Inputs: Use /agents/agent-making-agent/README.md as the standards source.
 Constraints: Review only, no file edits.
 Output: findings + rubric
 ```
@@ -26,7 +26,7 @@ Lists top 3 concrete improvements.
 ```text
 Agent: agent-reviewing-agent
 Goal: Review /agents/api-security-agent/ focusing on template usability and portability.
-Inputs: Use /guides/AGENT_MAKING_INSTRUCTIONS.md as the standard.
+Inputs: Use /agents/agent-making-agent/README.md as the standards source.
 Constraints: Review only; fail if templates require replacement text or absolute local paths.
 Output: findings + rubric + hard-gate failures
 ```

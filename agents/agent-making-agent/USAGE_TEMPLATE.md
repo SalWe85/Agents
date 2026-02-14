@@ -4,7 +4,8 @@
 ```text
 Agent: agent-making-agent
 Goal: New agent to create:
-Inputs: Additional context or standards:
+Inputs: Use /agents/agent-making-agent/README.md as the standards source.
+Inputs: Additional context:
 Constraints: Documentation only, no code edits.
 Output: three files in the new agent folder: README.md + USAGE_TEMPLATE.md + EXAMPLES.md
 ```
@@ -13,7 +14,8 @@ Output: three files in the new agent folder: README.md + USAGE_TEMPLATE.md + EXA
 ```text
 Agent: agent-making-agent
 Goal: Define a new agent that drafts release notes from merged pull requests.
-Inputs: Use /guides/AGENT_MAKING_INSTRUCTIONS.md and current repository standards.
+Inputs: Use /agents/agent-making-agent/README.md as the standards source.
+Inputs: Additional context: release notes should group changes by feature area.
 Constraints: Documentation only, no code edits.
 Output: New agent package with README.md (required sections, hard gates, visible rubric), USAGE_TEMPLATE.md (blank + filled templates), and EXAMPLES.md (at least 2 diverse input/output examples + adaptation guidance).
 ```
