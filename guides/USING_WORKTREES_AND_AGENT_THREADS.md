@@ -40,3 +40,28 @@ Quick findings for using Codex threads with git worktrees.
 5. Ensure each forked worktree is on a named branch.
 6. Commit/push work.
 7. Delete stale worktrees only after commits are safe and thread context is moved.
+
+## AGENTS.md vs Skills vs MCP (And This Repo's Approach)
+
+- `AGENTS.md`: instruction policy and context loading.
+  - It defines how Codex behaves in a repo (rules, preferences, constraints).
+  - It can be layered globally and per project.
+  - Docs: [Custom instructions with AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
+
+- Skills: reusable capability packs (`SKILL.md` plus optional scripts/resources).
+  - They define how Codex performs a specific type of task.
+  - They can trigger explicitly or by matching task intent.
+  - Docs: [Agent Skills](https://developers.openai.com/codex/skills/)
+
+- MCP: protocol/server integration layer.
+  - It gives Codex tools and context from external systems (for example docs, browser tools, Figma, Sentry).
+  - Docs: [Model Context Protocol (MCP)](http://developers.openai.com/codex/mcp)
+
+### How This Repo Differs
+
+- This repo uses local "agent definitions" under `/agents` as a hybrid model:
+  - policy + workflow contract + reusable templates in one place
+  - explicit invocation by prompt
+  - per-run customization through inputs
+- These local agents are project-scoped, not globally auto-applied.
+- This is intentional: it avoids hidden global behavior and keeps execution predictable per project/thread.
