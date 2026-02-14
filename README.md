@@ -20,16 +20,18 @@ Instead, this repo stores:
 ```text
 .
 ├── agents/
-│   └── agent-agent/
+│   ├── agent-making-agent/
+│   │   └── README.md
+│   └── agent-reviewing-agent/
 │       └── README.md
 └── guides/
     ├── AGENT_MAKING_INSTRUCTIONS.md
     └── AGENT_USING_INSTRUCTIONS.md
 ```
 
-## First Agent: Agent Agent
+## First Agent: Agent Making Agent
 
-The first agent in this repository is **Agent Agent**.
+The first agent in this repository is **Agent Making Agent**.
 
 Its purpose is to define what all future agents should include:
 
@@ -39,7 +41,7 @@ Its purpose is to define what all future agents should include:
 - Constraints and safety boundaries
 - Verification and quality checks
 
-See `/agents/agent-agent/README.md` for the full checklist.
+See `/agents/agent-making-agent/README.md` for the full checklist.
 
 ## Getting Started
 
@@ -71,4 +73,4 @@ See `/agents/agent-agent/README.md` for the full checklist.
 
 ## Next Step
 
-Use **Agent Agent** to create a standard template, then build your second agent using that template.
+Use **Agent Making Agent** to create a standard template, then build your second agent using that template.

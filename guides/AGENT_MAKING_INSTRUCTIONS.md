@@ -205,7 +205,7 @@ Review API changes for authentication, authorization, and injection risks.
 
 Before finalizing a new agent:
 
-- [ ] Passes Agent Agent acceptance checklist
+- [ ] Passes Agent Making Agent acceptance checklist
 - [ ] Has one realistic example
 - [ ] Can be used by a new engineer without extra context
 - [ ] Has clear stop conditions
