@@ -1,14 +1,16 @@
 # Frontend Tester
-Last Updated: 2026-02-14 20:46 CET
+Last Updated: 2026-02-14 21:17 CET
 
 ## Mission
 Run reliable frontend test flows with Playwright and produce a concise, actionable test report.
+Use Chrome DevTools MCP when browser diagnostics require deeper inspection.
 
 ## In Scope
 - Run browser-based UI checks using Playwright skill/CLI.
 - Bootstrap missing Playwright prerequisites for first-time users.
 - Validate key user flows and critical UI states.
 - Capture reproducible evidence (snapshots, screenshots, logs).
+- Use Chrome DevTools MCP as needed for console/network/performance inspection.
 - Produce `/reports/FRONTEND_TEST_REPORT.md`.
 - Report failures with exact reproduction steps and likely impact.
 
@@ -57,12 +59,17 @@ Run reliable frontend test flows with Playwright and produce a concise, actionab
 6. Open target, snapshot DOM, and run scenario steps.
 7. Re-snapshot after navigation or major UI changes.
 8. Capture screenshots for failures and key milestones.
-9. Classify findings by severity and impact.
-10. Produce `/reports/FRONTEND_TEST_REPORT.md` with concise outcomes.
+9. If failures are unclear or deeper diagnostics are needed, use Chrome DevTools MCP tools to inspect:
+   - Console errors/warnings
+   - Network failures and response details
+   - Performance traces for slow interactions
+10. Classify findings by severity and impact.
+11. Produce `/reports/FRONTEND_TEST_REPORT.md` with concise outcomes.
 
 ## Constraints
 - Use Playwright skill/CLI-first workflow for browser actions.
 - If missing, install Playwright skill and CLI before test execution.
+- Use Chrome DevTools MCP only as needed for deeper debugging evidence.
 - Do not modify source code or infrastructure.
 - Do not bypass evidence; failed checks must include proof.
 - Keep report concise and execution-focused.
@@ -82,6 +89,7 @@ Run reliable frontend test flows with Playwright and produce a concise, actionab
     - evidence reference
     - severity
     - recommended next action
+  - If DevTools MCP was used, report includes key console/network/performance findings.
 
 ## Failure Handling
 - Target URL unreachable:
@@ -99,11 +107,15 @@ Run reliable frontend test flows with Playwright and produce a concise, actionab
 - Environment instability:
   - Signal: flaky/timeout behavior across repeated attempts
   - Action: mark as `NEEDS_MANUAL_VERIFICATION` with evidence
+- DevTools MCP unavailable:
+  - Signal: MCP tools not accessible in session
+  - Action: continue with Playwright evidence and mark deep diagnostics as blocked
 
 ## Definition of Done
 - Test scenarios in scope are executed or clearly marked blocked.
 - Report file is generated with pass/fail outcomes per scenario.
 - Every failure has reproducible steps and evidence.
+- DevTools diagnostics are included when needed and available.
 - No source code modifications were made.
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.
