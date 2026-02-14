@@ -12,6 +12,11 @@ In this project, an agent is a documented worker with:
 - Boundaries and safety rules
 - A repeatable workflow
 
+Each agent should be delivered as a two-file package in its folder:
+
+- `README.md` (specification and rubric)
+- `USAGE_TEMPLATE.md` (blank + filled invocation templates)
+
 If your agent cannot explain these five points, it is not ready.
 
 ## Design Principles
@@ -125,7 +130,8 @@ Every `agents/<name>/README.md` should include:
 7. Validation
 8. Failure handling
 9. Definition of done
-10. Examples
+10. Usage template file (`USAGE_TEMPLATE.md`) with blank + filled example
+11. Examples
 
 ## Quality Rubric (Score 0-2 Per Item)
 
@@ -210,3 +216,4 @@ Before finalizing a new agent:
 - [ ] Can be used by a new engineer without extra context
 - [ ] Has clear stop conditions
 - [ ] Includes at least one verification step
+- [ ] Includes `USAGE_TEMPLATE.md` with blank and filled variants
