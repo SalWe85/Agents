@@ -12,10 +12,23 @@ In this project, an agent is a documented worker with:
 - Boundaries and safety rules
 - A repeatable workflow
 
-Each agent should be delivered as a two-file package in its folder:
+Each agent should be delivered as a three-file package in its folder:
 
 - `README.md` (specification and rubric)
 - `USAGE_TEMPLATE.md` (blank + filled invocation templates)
+- `EXAMPLES.md` (diverse input/output examples + adaptation guidance)
+
+Template quality standard for `USAGE_TEMPLATE.md`:
+
+- Include only fields relevant to that specific agent
+- Keep blank template append-only (users add values, no deletion/replacement needed)
+- Avoid machine-specific absolute paths; use portable repo-relative paths
+
+Template quality standard for `EXAMPLES.md`:
+
+- Include at least 2 diverse scenarios (not near-duplicates)
+- Each scenario should include input and expected output
+- Include a user-facing note to review and adapt examples to project-specific needs
 
 If your agent cannot explain these five points, it is not ready.
 
@@ -131,7 +144,7 @@ Every `agents/<name>/README.md` should include:
 8. Failure handling
 9. Definition of done
 10. Usage template file (`USAGE_TEMPLATE.md`) with blank + filled example
-11. Examples
+11. Examples file (`EXAMPLES.md`) with diverse input/output examples and adaptation guidance
 
 ## Quality Rubric (Score 0-2 Per Item)
 
@@ -217,3 +230,4 @@ Before finalizing a new agent:
 - [ ] Has clear stop conditions
 - [ ] Includes at least one verification step
 - [ ] Includes `USAGE_TEMPLATE.md` with blank and filled variants
+- [ ] Includes `EXAMPLES.md` with at least 2 diverse examples and adaptation guidance

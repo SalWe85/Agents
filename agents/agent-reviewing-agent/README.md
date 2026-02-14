@@ -1,11 +1,11 @@
 # Agent Reviewing Agent
-Last Updated: 2026-02-14 12:14 CET
+Last Updated: 2026-02-14 12:47 CET
 
 ## Mission
 Review candidate agents for quality, completeness, and safety against repository standards.
 
 ## In Scope
-- Review agent packages under `agents/` (both required files)
+- Review agent packages under `agents/` (all required files)
 - Score agents with the standard 16-point rubric
 - Report pass/fail with actionable improvements
 - Verify hard gates (timestamp + visible rubric output)
@@ -25,7 +25,7 @@ Review candidate agents for quality, completeness, and safety against repository
 ## Outputs
 - Format:
   - Findings list by severity
-  - File completeness status for `README.md` and `USAGE_TEMPLATE.md`
+  - File completeness status for `README.md`, `USAGE_TEMPLATE.md`, and `EXAMPLES.md`
   - Rubric scores (0-2 each criterion)
   - Total score (`X/16`) and `PASS/FAIL`
   - Top 3 improvements
@@ -36,23 +36,33 @@ Review candidate agents for quality, completeness, and safety against repository
 
 ## Workflow
 1. Read the target agent folder and standards docs.
-2. Verify required files exist: `README.md` and `USAGE_TEMPLATE.md`.
+2. Verify required files exist: `README.md`, `USAGE_TEMPLATE.md`, and `EXAMPLES.md`.
 3. Check hard gates first (timestamp present and rubric output requirements).
 4. Validate `USAGE_TEMPLATE.md` has `Blank Template` and `Filled Example`.
-5. Evaluate each rubric criterion (0-2) with evidence.
-6. Compute total score and determine pass/fail threshold.
-7. Return findings and top improvements.
+5. Validate blank template quality:
+   - fields are relevant for this agent
+   - template is append-only (no replacement required)
+   - paths are portable (not machine-specific absolute paths)
+6. Validate `EXAMPLES.md` quality:
+   - includes at least two diverse input/output examples
+   - includes explicit guidance telling users to adapt examples to their own needs
+7. Evaluate each rubric criterion (0-2) with evidence.
+8. Compute total score and determine pass/fail threshold.
+9. Return findings and top improvements.
 
 ## Constraints
 - Do not give a pass if any hard gate fails.
-- Do not give a pass if either required file is missing.
+- Do not give a pass if any required file is missing.
 - Do not hide rubric results; they must be shown to user.
 - Do not invent evidence; tie each finding to actual file content.
+- Do not approve usage templates that require deleting placeholder text.
+- Do not approve agents missing diverse examples with user adaptation guidance.
 
 ## Validation
 - Confirm the agent folder contains:
   - `README.md`
   - `USAGE_TEMPLATE.md`
+  - `EXAMPLES.md`
 - Confirm all mandatory sections exist:
   - Mission
   - In Scope
@@ -68,15 +78,30 @@ Review candidate agents for quality, completeness, and safety against repository
 - Confirm `USAGE_TEMPLATE.md` includes both:
   - `Blank Template`
   - `Filled Example`
+- Confirm blank template includes only relevant fields for that agent.
+- Confirm blank template is append-only and does not require replacing/deleting text.
+- Confirm template paths are portable and not machine-specific absolute paths.
+- Confirm `EXAMPLES.md` has at least two diverse examples.
+- Confirm each example includes input and expected output.
+- Confirm `EXAMPLES.md` instructs users to review and adapt examples to their context.
 - Confirm rubric breakdown and total are shown in output.
 
 ## Failure Handling
-- If target file is missing:
+- If target folder is missing:
   - Signal: target folder path does not exist
   - Action: stop and request correct folder path
 - If required files are missing:
-  - Signal: `README.md` or `USAGE_TEMPLATE.md` absent
+  - Signal: `README.md`, `USAGE_TEMPLATE.md`, or `EXAMPLES.md` absent
   - Action: return `FAIL` with missing file list
+- If blank template is not append-only:
+  - Signal: user must replace/delete placeholder content to run it
+  - Action: return `FAIL` and request append-only template rewrite
+- If template paths are not portable:
+  - Signal: machine-specific absolute paths are hardcoded
+  - Action: return `FAIL` and request repo-relative path format
+- If examples are missing or weak:
+  - Signal: no `EXAMPLES.md`, fewer than two examples, weak diversity, or missing adaptation guidance
+  - Action: return `FAIL` and request complete examples file
 - If standards are ambiguous:
   - Signal: conflicting instructions
   - Action: use stricter requirement and call out assumption
@@ -91,6 +116,7 @@ Review candidate agents for quality, completeness, and safety against repository
 - Top 3 improvements are specific and actionable
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.
+Scenario examples live in `EXAMPLES.md` in this folder.
 
 ## Self-Evaluation Rubric
 - Purpose clarity: 2/2
