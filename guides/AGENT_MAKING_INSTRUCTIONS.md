@@ -1,6 +1,9 @@
 # Agent Making Instructions
 
 This guide teaches programmers who are new to agents how to design useful, reliable agents.
+An agent as we define it and use it here differs from what most llms refer to as AGENTS and SKILLS and what we use here is a hybrid.
+AGENT.md files that codex expects are global or per project rules that define how codex will interact with the repo. Our approach completely abandons this idea and defines agents for specific units of work.
+SKILL.md files define what skill codex can use, how it will be called, how to use it and what for. Our approach keeps this mechanism entirely and relies on users setting up skills on their local configuration.
 
 ## What Is an Agent in This Repo?
 

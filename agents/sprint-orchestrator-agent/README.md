@@ -1,8 +1,8 @@
 # Sprint Orchestrator Agent
-Last Updated: 2026-02-14 22:40 CET
+Last Updated: 2026-02-15 10:30 CET
 
 ## Mission
-Plan and orchestrate sprint-scale work by mapping task units to existing agents, generating ready-to-run activation prompts, tracking execution branches/status, and coordinating merge flow.
+Plan and orchestrate sprint-scale work by mapping task units to existing agents, generating ready-to-run activation prompts, enforcing developer -> tester -> review handoff rules, tracking execution branches/status, and coordinating merge flow.
 
 ## In Scope
 - Ingest sprint task inputs (for example Jira exports or structured task lists).
@@ -20,6 +20,11 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Finalized plan after user confirmation
 - Add thread/fork identifiers per unit so parallel execution is easy to track.
 - Track branch ownership and completion state per unit.
+- Route implementation units to developer agents first, then tester/review agents according to testability.
+- Enforce per-unit substatus progression:
+  - `codex_dev_done`
+  - `codex_test_done`
+  - `codex_review_ready`
 - Support merge coordination modes:
   - `sequential` (default, merge one unit at a time as ready)
   - `batch` (merge a selected ready set in one merge wave)
@@ -63,6 +68,8 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
       - `branch`
       - `owner`
       - `status` (`PLANNED`, `IN_PROGRESS`, `READY_FOR_REVIEW`, `COMPLETE`, `MERGED`, `BLOCKED`)
+      - `substatus` (`codex_dev_done`, `codex_test_done`, `codex_review_ready`, or blank while in progress)
+      - `handoff_to_agent`
       - `PR`
       - `base_sha`
       - `head_sha`
@@ -82,29 +89,35 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Repository-relative `/reports`
 - Success criteria:
   - Plan is actionable, concise, and traceable by unit ID.
-  - Every work unit has one clear primary agent and one activation prompt.
+  - Every work unit has one clear primary developer agent and deterministic tester/review handoff rules.
   - Every work unit has branch + status tracking in execution log.
   - Merge coordination output is available and deterministic.
 
 ## Workflow
 1. Parse sprint inputs and normalize tasks into candidate units.
 2. Scan `/agents/*/README.md` to understand available capabilities.
-3. Match each unit to the best-fit agent using explicit selection reasoning.
+3. Match each unit to the best-fit primary developer agent using explicit selection reasoning.
 4. Assign deterministic unit IDs (`UOW-001`, `UOW-002`, ...).
-5. Build dependency and execution-wave ordering.
-6. Produce draft `/reports/SPRINT_PLAN.md`.
-7. Show concise confirmation summary:
+5. Build handoff chains per unit:
+   - implementation -> testing -> review-ready
+   - direct implementation -> review-ready only for no-test-surface tasks
+6. Build dependency and execution-wave ordering.
+7. Produce draft `/reports/SPRINT_PLAN.md`.
+8. Show concise confirmation summary:
    - total units
    - mapped agents
    - high-risk units
    - unresolved ambiguities
-8. Wait for user confirmation before finalizing activations.
-9. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
-10. Require each activation prompt to include branch and execution-log update instructions.
-11. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
-12. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
-13. On status updates (`READY_FOR_REVIEW`/`COMPLETE`), refresh merge eligibility.
-14. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
+9. Wait for user confirmation before finalizing activations.
+10. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
+11. Require each activation prompt to include:
+    - feature-branch creation from default branch
+    - task-id commit message requirement
+    - task-list updates for `codex_dev_done` / `codex_test_done` / `codex_review_ready`
+12. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
+13. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
+14. On status updates, refresh merge eligibility only when substatus reaches `codex_review_ready`.
+15. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
 
 ## Constraints
 - Plan-only agent: do not execute implementation tasks.
@@ -113,6 +126,13 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 - Keep outputs concise; large details stay in report files, not chat flood.
 - Use `/agents/agent-making-agent/README.md` as canonical standards source.
 - Treat `AGENT_MAKING_INSTRUCTIONS.md` as human guidebook, not execution standard.
+- Prefer these implementation mappings when applicable:
+  - backend work -> `backend-developer`
+  - frontend work -> `frontend-developer`
+  - coupled backend+frontend work -> `fullstack-developer`
+- Prefer tester mappings:
+  - backend implementation handoff -> `backend-tester`
+  - frontend implementation handoff -> `frontend-tester`
 - Every unit must have:
   - `UOW-ID`
   - selected agent
@@ -123,10 +143,13 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 - Must recommend starting subagent forks from a lightweight launcher thread.
 - Every subagent activation must instruct the subagent to update `/reports/SPRINT_EXECUTION_LOG.md` at:
   - start (`IN_PROGRESS`)
-  - review-ready (`READY_FOR_REVIEW`)
+  - development completion (`codex_dev_done`)
+  - testing completion (`codex_test_done`) when testing is required
+  - review-ready (`codex_review_ready`)
   - completion (`COMPLETE`)
 - Merge gate policy before marking unit merge-ready:
   - task acceptance criteria met
+  - `codex_review_ready` set
   - review status passed
   - tests/checks passed (if applicable)
   - branch up to date with `main`
@@ -145,6 +168,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 - `SPRINT_PLAN.md` checks:
   - Every unit has a unique `UOW-ID`.
   - Every unit has one mapped primary agent.
+  - Every unit has defined tester/review handoff path.
   - Priority and dependencies are present per unit.
 - `SPRINT_AGENT_ACTIVATIONS.md` checks:
   - One filled activation prompt per `UOW-ID`.
@@ -153,7 +177,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Includes warning about inherited context and lightweight-fork recommendation.
 - `SPRINT_EXECUTION_LOG.md` checks:
   - One row per `UOW-ID` with all mandatory tracking fields.
-  - Branch and status values are present for all units.
+  - Branch, status, substatus, and handoff target values are present for all units.
 - `SPRINT_MERGE_PLAN.md` checks:
   - Includes selected merge mode.
   - Includes merge order/waves and gate checklist per unit.
@@ -177,8 +201,11 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Signal: user has not approved draft plan
   - Action: do not finalize activation templates
 - Missing execution log updates:
-  - Signal: unit status stale or branch field empty
+  - Signal: unit status/substatus stale or branch field empty
   - Action: mark unit `BLOCKED` for merge and include remediation steps
+- Invalid handoff sequence:
+  - Signal: unit marked review-ready without required test phase
+  - Action: block merge and require status correction with evidence
 - Merge gate failure:
   - Signal: incomplete checks, outdated branch, or failed review/tests
   - Action: keep unit out of merge set and report reason in merge plan/result
@@ -187,7 +214,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 - Draft and finalized sprint plan files are generated.
 - All planned units have stable `UOW-ID`s and mapped agents.
 - Activation prompts are ready to copy and use per unit.
-- Reports include fork/thread identifiers, branch suggestions, and execution log entries.
+- Reports include fork/thread identifiers, branch suggestions, and execution log entries with substatus handoff tracking.
 - Merge plan and merge result reports are generated with deterministic ordering.
 - Context-inheritance warning and lightweight-fork guidance are explicit.
 
