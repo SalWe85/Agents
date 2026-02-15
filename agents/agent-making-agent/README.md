@@ -61,12 +61,13 @@ Define and enforce a minimum quality standard for every new agent in this reposi
 2. Verify README includes all required sections.
 3. Validate hard gates (timestamp near top and rubric transparency requirements).
 4. Validate README `Skills` section exists with all mandatory subsections.
-5. Validate `USAGE_TEMPLATE.md` has both `Blank Template` and `Filled Example`.
-6. Validate `EXAMPLES.md` includes at least two diverse input/output examples.
-7. Validate `EXAMPLES.md` includes explicit guidance telling users to adapt examples to their own needs.
-8. Score agent with the quality rubric (0-2 per criterion).
-9. Output full scoring breakdown to user, including total and weak areas.
-10. If failing, provide targeted revision actions and re-run scoring after edits.
+5. If the agent depends on MCP-enabled tools, validate README `MCP` section exists with required subsections.
+6. Validate `USAGE_TEMPLATE.md` has both `Blank Template` and `Filled Example`.
+7. Validate `EXAMPLES.md` includes at least two diverse input/output examples.
+8. Validate `EXAMPLES.md` includes explicit guidance telling users to adapt examples to their own needs.
+9. Score agent with the quality rubric (0-2 per criterion).
+10. Output full scoring breakdown to user, including total and weak areas.
+11. If failing, provide targeted revision actions and re-run scoring after edits.
 
 ## Constraints
 - Canonical standards source for agent creation/review is this file: `/agents/agent-making-agent/README.md`.
@@ -90,6 +91,10 @@ Define and enforce a minimum quality standard for every new agent in this reposi
   - Must include `Required Skills`, `Potentially Required Skills`, `If Missing, Install From`, `Fallback Behavior If Skill Is Unavailable`, and `Restart Note`.
   - `If Missing, Install From` must reference repo-local skill paths (for example `/skills/<skill-name>/SKILL.md`) and runtime paths under `$CODEX_HOME/skills/`.
   - `Restart Note` must explicitly tell users to restart Codex after installing a skill.
+- README `MCP` section rules (required only if agent behavior depends on MCP):
+  - Must include `Required MCP Servers`, `Potentially Required MCP Servers`, `If Missing, Setup From`, `Fallback Behavior If MCP Is Unavailable`, and `Restart Note`.
+  - `If Missing, Setup From` must reference repo-local docs under `/mcp/` (for example `/mcp/servers/<server>.md` and `/mcp/templates/mcp-config.example.toml`).
+  - `Restart Note` must explicitly tell users to restart Codex after MCP setup/config changes.
 
 ## Validation
 - Required files exist in each agent folder:
@@ -119,6 +124,7 @@ Define and enforce a minimum quality standard for every new agent in this reposi
   - [ ] `EXAMPLES.md` contains user guidance to adapt examples to their needs
   - [ ] `Skills` section contains required/potential/install/fallback/restart subsections
   - [ ] `Skills` section includes a Codex restart note after skill installation
+  - [ ] MCP-dependent agents include `MCP` section with setup, fallback, and restart note
 - Rubric score threshold:
   - Minimum `14/16` to pass
 
@@ -147,6 +153,9 @@ Define and enforce a minimum quality standard for every new agent in this reposi
 - Missing or incomplete skills section:
   - Signal: Missing `Skills` heading or missing required skill subsections
   - Action: Return `FAIL` and require a complete skills section with install paths, fallback, and restart note
+- Missing or incomplete MCP section for MCP-dependent agent:
+  - Signal: Agent depends on MCP but README lacks `MCP` section or required subsections
+  - Action: Return `FAIL` and require complete MCP metadata with setup paths, fallback, and restart note
 
 ## Definition of Done
 - Candidate agent satisfies all hard gates
@@ -179,6 +188,9 @@ An agent fails regardless of score if any item below is false:
 - [ ] README contains `Skills` section with required/potential/install/fallback/restart subsections
 - [ ] Skills install guidance includes repo `/skills/` and runtime `$CODEX_HOME/skills/` paths
 - [ ] Skills section includes explicit Codex restart note after skill install
+- [ ] MCP-dependent agents include README `MCP` section with required/potential/setup/fallback/restart subsections
+- [ ] MCP setup guidance references repo `/mcp/` docs and config template
+- [ ] MCP section includes explicit Codex restart note after MCP setup/config changes
 
 ## Required Rubric Output Format
 Every agent review must show this information to users:
@@ -230,6 +242,9 @@ Top Improvements
 - [ ] README contains complete `Skills` section
 - [ ] Skills section includes fallback behavior if skills are unavailable
 - [ ] Skills section tells user to restart Codex after installing skills
+- [ ] MCP-dependent agents include complete `MCP` section
+- [ ] MCP-dependent agents include fallback behavior if MCP is unavailable
+- [ ] MCP-dependent agents include restart note after MCP setup/config changes
 
 ## Minimal Template for Future Agents
 Copy this into `agents/<new-agent>/README.md`:
@@ -256,6 +271,13 @@ Last Updated: YYYY-MM-DD HH:MM TZ
 - Potentially Required Skills:
 - If Missing, Install From:
 - Fallback Behavior If Skill Is Unavailable:
+- Restart Note:
+
+## MCP (If Needed)
+- Required MCP Servers:
+- Potentially Required MCP Servers:
+- If Missing, Setup From:
+- Fallback Behavior If MCP Is Unavailable:
 - Restart Note:
 
 ## Outputs

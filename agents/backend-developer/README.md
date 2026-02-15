@@ -50,6 +50,23 @@ Implement backend task changes directly in code with stack-aware decisions, stri
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline backend work.
+- Potentially Required MCP Servers:
+  - `linear`: when task state or defects must be synced to Linear.
+  - `context7`: when introducing new backend libraries/frameworks or using unfamiliar APIs not already in project stack.
+- If Missing, Setup From:
+  - `/mcp/servers/linear.md`
+  - `/mcp/servers/context7.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Continue backend implementation in repository only.
+  - For new tech or unfamiliar APIs, use conservative implementation and clearly mark doc-confidence risk.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Backend code changes implemented in repository.
@@ -79,22 +96,23 @@ Implement backend task changes directly in code with stack-aware decisions, stri
    - `/STACK.md`
    - `/docs/STACK.md`
    - inspect repository manifests (`package.json`, `pyproject.toml`, `pom.xml`, `build.gradle`, `go.mod`, etc.)
-3. If stack choice is ambiguous and affects implementation approach, present recommended options and request a user choice before editing code.
-4. Ensure branch safety:
+3. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
+4. If stack choice is ambiguous and affects implementation approach, present recommended options and request a user choice before editing code.
+5. Ensure branch safety:
    - fetch/sync default branch
    - create or switch to task branch from `default_branch`
    - confirm branch naming and task scope
-5. Implement backend changes in small, reviewable increments.
-6. Run backend validations appropriate to detected stack:
+6. Implement backend changes in small, reviewable increments.
+7. Run backend validations appropriate to detected stack:
    - lint/static checks
    - unit/integration tests in scope
    - compile/build check
-7. Update task tracking:
+8. Update task tracking:
    - if `task_list_path` exists, set substatus `codex_dev_done`
    - if no meaningful tests exist for this task, move directly to `codex_review_ready`
-8. If testing is required, hand off to `backend-tester` with explicit scope and changed-file context.
-9. If `linear_issue_id` provided, update issue status and add implementation summary comment.
-10. Create grouped commit(s) with commit message including `task_identifier`.
+9. If testing is required, hand off to `backend-tester` with explicit scope and changed-file context.
+10. If `linear_issue_id` provided, update issue status and add implementation summary comment.
+11. Create grouped commit(s) with commit message including `task_identifier`.
 
 ## Constraints
 - Always start task work on a branch created from `default_branch` unless user explicitly provides an existing task branch.
@@ -105,6 +123,7 @@ Implement backend task changes directly in code with stack-aware decisions, stri
 - Do not use destructive commands (`git reset --hard`, force branch deletion, etc.).
 - Do not force push unless user explicitly authorizes it.
 - If task source is Linear, issue status and comment update are mandatory when task is complete.
+- When adding unfamiliar libraries/APIs, consult Context7 first when available instead of guessing usage.
 
 ## Validation
 - Branch checks:
@@ -117,6 +136,9 @@ Implement backend task changes directly in code with stack-aware decisions, stri
   - lint/static checks passed (or explicitly unavailable)
   - tests passed for affected backend scope (or explicitly blocked)
   - compile/build check passed (or explicitly unavailable)
+- Documentation checks for new tech:
+  - Context7 query summary included when new libraries/frameworks or unfamiliar APIs were introduced
+  - if Context7 unavailable, explicit fallback/risk note included
 - Process checks:
   - task list substatus updated if task list exists
   - Linear status/comment updated if `linear_issue_id` provided

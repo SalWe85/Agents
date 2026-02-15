@@ -64,6 +64,21 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline orchestration.
+- Potentially Required MCP Servers:
+  - `linear`: when sprint tasks and status must be tracked in Linear.
+- If Missing, Setup From:
+  - `/mcp/servers/linear.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Continue with markdown plans and local tracking files.
+  - Return manual ticket-sync instructions.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - `/reports/SPRINT_PLAN.md`:

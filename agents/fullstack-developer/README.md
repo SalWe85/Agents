@@ -55,6 +55,25 @@ Implement connected backend and frontend task changes directly with stack-aware 
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline fullstack implementation.
+- Potentially Required MCP Servers:
+  - `figma`: for UI design extraction.
+  - `linear`: for task/issue synchronization.
+  - `context7`: for latest framework/library docs when adding new tech or unfamiliar APIs.
+- If Missing, Setup From:
+  - `/mcp/servers/figma.md`
+  - `/mcp/servers/linear.md`
+  - `/mcp/servers/context7.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Continue implementation using repository context.
+  - Return manual follow-up actions for design/ticket sync and explicitly flag doc-confidence risk for new tech.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Fullstack code changes implemented directly.
@@ -77,18 +96,19 @@ Implement connected backend and frontend task changes directly with stack-aware 
 ## Workflow
 1. Validate required task inputs and acceptance criteria.
 2. Resolve stack context from `stack_file_path` or repository discovery.
-3. If stack/tooling ambiguity materially changes approach, present recommendation and request choice before edits.
-4. Create/switch task branch from `default_branch`.
-5. Implement backend and frontend changes in coordinated increments.
-6. Run layer-specific checks for all touched components.
-7. Update task list to `codex_dev_done` when task list exists.
-8. Determine tester handoff:
+3. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
+4. If stack/tooling ambiguity materially changes approach, present recommendation and request choice before edits.
+5. Create/switch task branch from `default_branch`.
+6. Implement backend and frontend changes in coordinated increments.
+7. Run layer-specific checks for all touched components.
+8. Update task list to `codex_dev_done` when task list exists.
+9. Determine tester handoff:
    - backend changes present -> handoff to `backend-tester`
    - frontend behavior changes present -> handoff to `frontend-tester`
    - both present -> handoff to both
    - no meaningful test surface -> move directly to `codex_review_ready`
-9. Update Linear issue status/comment when provided.
-10. Commit grouped task-only changes with task identifier in commit message.
+10. Update Linear issue status/comment when provided.
+11. Commit grouped task-only changes with task identifier in commit message.
 
 ## Constraints
 - Branch must originate from `default_branch` unless continuing an explicitly provided task branch.
@@ -97,11 +117,15 @@ Implement connected backend and frontend task changes directly with stack-aware 
 - Do not skip required task list or Linear updates.
 - Do not use destructive git commands.
 - No force push without explicit user permission.
+- When adding unfamiliar libraries/APIs, consult Context7 first when available instead of guessing usage.
 - If uncertainty impacts correctness, stop and ask instead of guessing.
 
 ## Validation
 - Branch and commit policy checks pass.
 - Backend and/or frontend validations pass for changed scope (or gaps are documented).
+- Documentation checks for new tech:
+  - Context7 query summary included when new libraries/frameworks or unfamiliar APIs were introduced
+  - if Context7 unavailable, explicit fallback/risk note included
 - Task list updated with `codex_dev_done` and proper handoff targets when present.
 - `codex_review_ready` is set only after required testing completion or explicit no-test rationale.
 - Linear issue updated when provided.

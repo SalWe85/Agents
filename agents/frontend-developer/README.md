@@ -52,6 +52,23 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline frontend coding.
+- Potentially Required MCP Servers:
+  - `figma`: when extracting design nodes, variables, screenshots, and assets.
+  - `context7`: when introducing a new frontend library/framework or using unfamiliar APIs not already in project stack.
+- If Missing, Setup From:
+  - `/mcp/servers/figma.md`
+  - `/mcp/servers/context7.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Implement from textual requirements and existing local assets.
+  - For new tech or unfamiliar APIs, use conservative implementation and explicitly flag doc-confidence risk.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Frontend code changes implemented directly.
@@ -77,18 +94,19 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
    - `/STACK.md`
    - `/docs/STACK.md`
    - repository inspection (`package.json`, workspace configs, framework files)
-3. If stack or framework choice is ambiguous and materially affects implementation, provide recommendation and request user choice before editing.
-4. Create/switch task branch from `default_branch` (`codex/<task-id>-<slug>` unless overridden).
-5. Implement frontend changes in reviewable increments.
-6. Run relevant checks:
+3. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
+4. If stack or framework choice is ambiguous and materially affects implementation, provide recommendation and request user choice before editing.
+5. Create/switch task branch from `default_branch` (`codex/<task-id>-<slug>` unless overridden).
+6. Implement frontend changes in reviewable increments.
+7. Run relevant checks:
    - lint and static checks
    - type checks
    - unit/component tests in scope
    - build/compile check
-7. Update task list status to `codex_dev_done` when task list exists.
-8. If testable UI behavior changed, hand off to `frontend-tester`; otherwise move directly to `codex_review_ready`.
-9. Update Linear issue status/comment if `linear_issue_id` provided.
-10. Commit grouped task-only changes with `task_identifier` in commit messages.
+8. Update task list status to `codex_dev_done` when task list exists.
+9. If testable UI behavior changed, hand off to `frontend-tester`; otherwise move directly to `codex_review_ready`.
+10. Update Linear issue status/comment if `linear_issue_id` provided.
+11. Commit grouped task-only changes with `task_identifier` in commit messages.
 
 ## Constraints
 - Always branch from the specified `default_branch` at task start.
@@ -97,6 +115,7 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
 - Do not mark task complete without running relevant checks.
 - Do not skip task list/Linear updates when applicable.
 - Do not use destructive git commands or force push without explicit authorization.
+- When adding unfamiliar libraries/APIs, consult Context7 first when available instead of guessing usage.
 - If design requirements are unclear, ask for clarification instead of inventing major UX changes.
 
 ## Validation
@@ -108,6 +127,9 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
   - lint/typecheck passed (or explicitly unavailable)
   - tests passed for changed scope (or explicitly blocked)
   - build passed (or explicitly unavailable)
+- Documentation checks for new tech:
+  - Context7 query summary included when new libraries/frameworks or unfamiliar APIs were introduced
+  - if Context7 unavailable, explicit fallback/risk note included
 - Process:
   - task list updated with `codex_dev_done` when present
   - handoff target set (`frontend-tester` or review-ready)

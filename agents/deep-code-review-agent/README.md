@@ -61,6 +61,21 @@ Perform deep, read-only code reviews across entire projects, especially codebase
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline deep review.
+- Potentially Required MCP Servers:
+  - `linear`: when review tasks should be created as trackable issues.
+- If Missing, Setup From:
+  - `/mcp/servers/linear.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Produce full markdown findings and prioritized tasks locally.
+  - Mark issue-sync actions as skipped.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Markdown report at `/reports/REVIEW_TASKS.md`

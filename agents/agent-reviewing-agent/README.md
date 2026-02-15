@@ -39,6 +39,21 @@ Review candidate agents for quality, completeness, and safety against repository
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline static agent review.
+- Potentially Required MCP Servers:
+  - `linear`: when review findings are expected to be turned into issues.
+- If Missing, Setup From:
+  - `/mcp/servers/linear.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Complete review and rubric scoring locally.
+  - Return manual issue creation steps.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Findings list by severity
@@ -65,12 +80,17 @@ Review candidate agents for quality, completeness, and safety against repository
    - includes `If Missing, Install From` with `/skills/...` and `$CODEX_HOME/skills/...`
    - includes `Fallback Behavior If Skill Is Unavailable`
    - includes explicit restart note after skill installation
-7. Validate `EXAMPLES.md` quality:
+7. If the agent depends on MCP-enabled tools, validate README `MCP` section quality:
+   - includes `Required MCP Servers` and `Potentially Required MCP Servers`
+   - includes `If Missing, Setup From` with `/mcp/...` references
+   - includes `Fallback Behavior If MCP Is Unavailable`
+   - includes explicit restart note after MCP setup/config changes
+8. Validate `EXAMPLES.md` quality:
    - includes at least two diverse input/output examples
    - includes explicit guidance telling users to adapt examples to their own needs
-8. Evaluate each rubric criterion (0-2) with evidence.
-9. Compute total score and determine pass/fail threshold.
-10. Return findings and top improvements.
+9. Evaluate each rubric criterion (0-2) with evidence.
+10. Compute total score and determine pass/fail threshold.
+11. Return findings and top improvements.
 
 ## Constraints
 - Do not give a pass if any hard gate fails.
@@ -80,6 +100,7 @@ Review candidate agents for quality, completeness, and safety against repository
 - Do not approve usage templates that require deleting placeholder text.
 - Do not approve agents missing diverse examples with user adaptation guidance.
 - Do not approve agents missing required skill metadata and fallback behavior.
+- Do not approve MCP-dependent agents missing MCP setup/fallback metadata.
 
 ## Validation
 - Confirm the agent folder contains:
@@ -110,6 +131,14 @@ Review candidate agents for quality, completeness, and safety against repository
   - `Restart Note`
 - Confirm `If Missing, Install From` includes both repo `/skills/<skill-name>/SKILL.md` and runtime `$CODEX_HOME/skills/<skill-name>/SKILL.md` guidance.
 - Confirm restart note explicitly tells users to restart Codex after installing skills.
+- For MCP-dependent agents, confirm README includes `MCP` section with:
+  - `Required MCP Servers`
+  - `Potentially Required MCP Servers`
+  - `If Missing, Setup From`
+  - `Fallback Behavior If MCP Is Unavailable`
+  - `Restart Note`
+- For MCP-dependent agents, confirm setup guidance references repo-local `/mcp/` docs/templates.
+- For MCP-dependent agents, confirm restart note explicitly tells users to restart Codex after MCP setup/config changes.
 - Confirm blank template includes only relevant fields for that agent.
 - Confirm blank template is append-only and does not require replacing/deleting text.
 - Confirm template paths are portable and not machine-specific absolute paths.
@@ -137,6 +166,9 @@ Review candidate agents for quality, completeness, and safety against repository
 - If skills metadata is missing or weak:
   - Signal: no `Skills` section, missing required skill subsections, missing install guidance, or missing restart note
   - Action: return `FAIL` and request a complete skills section
+- If MCP metadata is missing or weak for an MCP-dependent agent:
+  - Signal: no `MCP` section, missing required MCP subsections, missing setup guidance, or missing restart note
+  - Action: return `FAIL` and request a complete MCP section
 - If standards are ambiguous:
   - Signal: conflicting instructions
   - Action: use stricter requirement from `/agents/agent-making-agent/README.md` and call out assumption

@@ -1,4 +1,4 @@
-# Agent Making Instructions
+# Agent Making Instructions.   
 
 This guide teaches programmers who are new to agents how to design useful, reliable agents. As the creator of this repo i mainly use Codex as an llm agent so i will be refering to LLM agentic plugin as Codex from now on but it really doesnt matter which plugin you are using. 
 

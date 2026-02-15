@@ -51,6 +51,21 @@ Verify backend changes with configurable depth, add missing backend tests when n
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline backend testing.
+- Potentially Required MCP Servers:
+  - `linear`: when defects must be written directly to Linear.
+- If Missing, Setup From:
+  - `/mcp/servers/linear.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Continue test execution and local reporting.
+  - Return a manual issue list for user-side ticket creation.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - `/reports/BACKEND_TEST_REPORT.md` with:

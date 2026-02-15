@@ -66,6 +66,21 @@ Review only recent commits selected by exactly one review-window selector and pr
   - After installing any missing skill, restart Codex before rerunning this agent.
 
 
+## MCP (If Needed)
+- Required MCP Servers:
+  - None for baseline recent-commit review.
+- Potentially Required MCP Servers:
+  - `linear`: when findings should be synchronized into issue tracking.
+- If Missing, Setup From:
+  - `/mcp/servers/linear.md`
+  - `/mcp/templates/mcp-config.example.toml`
+- Fallback Behavior If MCP Is Unavailable:
+  - Return complete markdown findings and action plan.
+  - Mark issue-sync as deferred.
+- Restart Note:
+  - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Primary deliverable: `/reports/COMMIT_REVIEW_TASKS.md`
