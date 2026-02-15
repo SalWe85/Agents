@@ -1,5 +1,5 @@
 # Recent Commit Review Agent
-Last Updated: 2026-02-14 18:19 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Review only recent commits selected by exactly one review-window selector and produce prioritized remediation tasks in `/reports/COMMIT_REVIEW_TASKS.md` without changing source code.
@@ -48,6 +48,23 @@ Review only recent commits selected by exactly one review-window selector and pr
   - Review mode hint (`auto` by default)
   - Focus areas (for example: security, data integrity, error handling)
   - Exclusions (paths or file types to ignore)
+
+## Skills
+- Required Skills:
+  - None for baseline recent-commit review.
+- Potentially Required Skills:
+  - `linear`: when findings should be created/updated as tracked issues.
+  - `spreadsheet`: when exporting findings/task lists into tabular artifacts.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Produce full markdown findings and priority plan in-repo.
+  - Skip issue-sync/export integrations.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

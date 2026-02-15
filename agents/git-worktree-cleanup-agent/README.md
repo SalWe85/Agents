@@ -1,5 +1,5 @@
 # Git Worktree Cleanup Agent
-Last Updated: 2026-02-14 18:52 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Safely clean Git worktrees and related branches using a strict two-phase model: `plan` first, `apply` only after explicit user confirmation.
@@ -32,6 +32,19 @@ Safely clean Git worktrees and related branches using a strict two-phase model: 
   - `execute_confirmation` exact phrase: `yes, execute cleanup`
 - Optional:
   - `allow_force_dirty_worktrees` (`false` by default)
+
+## Skills
+- Required Skills:
+  - None. This agent is intentionally git-CLI-first.
+- Potentially Required Skills:
+  - None for standard operation.
+- If Missing, Install From:
+  - Not applicable for baseline operation.
+- Fallback Behavior If Skill Is Unavailable:
+  - Continue with deterministic `git` command workflow defined in this README.
+- Restart Note:
+  - If you install any optional skill for adjacent workflows, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

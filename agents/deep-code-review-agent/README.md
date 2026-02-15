@@ -1,5 +1,5 @@
 # Deep Code Review Agent
-Last Updated: 2026-02-14 18:19 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Perform deep, read-only code reviews across entire projects, especially codebases that have not had a full review in a long time, and produce a prioritized remediation task report.
@@ -43,6 +43,23 @@ Perform deep, read-only code reviews across entire projects, especially codebase
   - Existing report path: `/reports/REVIEW_TASKS.md` (required in `Re-review` mode)
   - Focus areas (modules, risk themes, compliance concerns)
   - Time budget or depth constraints
+
+## Skills
+- Required Skills:
+  - None for baseline deep review.
+- Potentially Required Skills:
+  - `linear`: when review findings must be converted into actionable issues.
+  - `spreadsheet`: when exporting prioritized task lists to tabular formats.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Deliver full markdown review with severity, evidence, and remediation steps.
+  - Skip automatic issue creation/export integrations.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

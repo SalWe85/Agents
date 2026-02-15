@@ -1,5 +1,5 @@
 # Frontend Developer
-Last Updated: 2026-02-15 10:30 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Implement frontend task changes directly with stack-aware decisions, task-scoped branch/commit discipline, and deterministic handoff to frontend testing and review.
@@ -33,6 +33,24 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
   - `linear_issue_id`
   - `branch_name` override
   - `commit_mode` (`commit` default)
+
+## Skills
+- Required Skills:
+  - None for baseline frontend implementation.
+- Potentially Required Skills:
+  - `figma-implement-design`: when exact design-to-code fidelity is required.
+  - `figma`: when extracting node metadata, variables, and screenshots.
+  - `playwright`: when validating critical UI flows in-browser.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/figma-implement-design/SKILL.md`, `/skills/figma/SKILL.md`, `/skills/playwright/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/figma-implement-design/SKILL.md`, `$CODEX_HOME/skills/figma/SKILL.md`, `$CODEX_HOME/skills/playwright/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Implement using textual requirements and local repository assets.
+  - Mark design-fidelity extraction and browser-automation validation as limited.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

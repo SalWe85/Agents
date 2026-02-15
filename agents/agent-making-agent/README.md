@@ -1,6 +1,6 @@
 # Agent Making Agent
 
-Last Updated: 2026-02-14 12:54 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Define and enforce a minimum quality standard for every new agent in this repository.
@@ -26,6 +26,24 @@ Define and enforce a minimum quality standard for every new agent in this reposi
   - Relevant project constraints
   - Preferred output format for scoring feedback
 
+## Skills
+- Required Skills:
+  - None for baseline agent generation.
+- Potentially Required Skills:
+  - `skill-creator`: when a new agent must also ship a Codex skill definition.
+  - `skill-installer`: when documenting exact install flows for missing skills.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/skill-creator/SKILL.md` and `/skills/skill-installer/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/skill-creator/SKILL.md` and `$CODEX_HOME/skills/skill-installer/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Continue generating agent files from standards in this README.
+  - Mark skill-dependent recommendations as optional follow-up actions.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+  - Display this not to user
+
+
 ## Outputs
 - Format:
   - Agent acceptance result (`PASS` or `FAIL`)
@@ -42,12 +60,13 @@ Define and enforce a minimum quality standard for every new agent in this reposi
 1. Verify the candidate agent package includes `README.md`, `USAGE_TEMPLATE.md`, and `EXAMPLES.md`.
 2. Verify README includes all required sections.
 3. Validate hard gates (timestamp near top and rubric transparency requirements).
-4. Validate `USAGE_TEMPLATE.md` has both `Blank Template` and `Filled Example`.
-5. Validate `EXAMPLES.md` includes at least two diverse input/output examples.
-6. Validate `EXAMPLES.md` includes explicit guidance telling users to adapt examples to their own needs.
-7. Score agent with the quality rubric (0-2 per criterion).
-8. Output full scoring breakdown to user, including total and weak areas.
-9. If failing, provide targeted revision actions and re-run scoring after edits.
+4. Validate README `Skills` section exists with all mandatory subsections.
+5. Validate `USAGE_TEMPLATE.md` has both `Blank Template` and `Filled Example`.
+6. Validate `EXAMPLES.md` includes at least two diverse input/output examples.
+7. Validate `EXAMPLES.md` includes explicit guidance telling users to adapt examples to their own needs.
+8. Score agent with the quality rubric (0-2 per criterion).
+9. Output full scoring breakdown to user, including total and weak areas.
+10. If failing, provide targeted revision actions and re-run scoring after edits.
 
 ## Constraints
 - Canonical standards source for agent creation/review is this file: `/agents/agent-making-agent/README.md`.
@@ -67,6 +86,10 @@ Define and enforce a minimum quality standard for every new agent in this reposi
   - Must include at least two diverse examples (different scenarios, not minor wording changes).
   - Each example must show both input and expected output.
   - Must include an explicit note instructing users to review and adapt examples for their own context.
+- README `Skills` section rules:
+  - Must include `Required Skills`, `Potentially Required Skills`, `If Missing, Install From`, `Fallback Behavior If Skill Is Unavailable`, and `Restart Note`.
+  - `If Missing, Install From` must reference repo-local skill paths (for example `/skills/<skill-name>/SKILL.md`) and runtime paths under `$CODEX_HOME/skills/`.
+  - `Restart Note` must explicitly tell users to restart Codex after installing a skill.
 
 ## Validation
 - Required files exist in each agent folder:
@@ -78,6 +101,7 @@ Define and enforce a minimum quality standard for every new agent in this reposi
   - In Scope
   - Out of Scope
   - Inputs
+  - Skills
   - Outputs
   - Workflow
   - Constraints
@@ -93,6 +117,8 @@ Define and enforce a minimum quality standard for every new agent in this reposi
   - [ ] Blank template is relevant, append-only, and path-portable
   - [ ] `EXAMPLES.md` exists with at least two diverse input/output examples
   - [ ] `EXAMPLES.md` contains user guidance to adapt examples to their needs
+  - [ ] `Skills` section contains required/potential/install/fallback/restart subsections
+  - [ ] `Skills` section includes a Codex restart note after skill installation
 - Rubric score threshold:
   - Minimum `14/16` to pass
 
@@ -118,6 +144,9 @@ Define and enforce a minimum quality standard for every new agent in this reposi
 - Invalid blank template design:
   - Signal: Template includes irrelevant fields, replacement placeholders, or absolute local paths
   - Action: Return `FAIL` and require rewrite to append-only portable format
+- Missing or incomplete skills section:
+  - Signal: Missing `Skills` heading or missing required skill subsections
+  - Action: Return `FAIL` and require a complete skills section with install paths, fallback, and restart note
 
 ## Definition of Done
 - Candidate agent satisfies all hard gates
@@ -147,6 +176,9 @@ An agent fails regardless of score if any item below is false:
 - [ ] Blank template is append-only (no deletion/replacement required)
 - [ ] `EXAMPLES.md` has at least two diverse input/output examples
 - [ ] `EXAMPLES.md` includes guidance for users to adapt examples to their needs
+- [ ] README contains `Skills` section with required/potential/install/fallback/restart subsections
+- [ ] Skills install guidance includes repo `/skills/` and runtime `$CODEX_HOME/skills/` paths
+- [ ] Skills section includes explicit Codex restart note after skill install
 
 ## Required Rubric Output Format
 Every agent review must show this information to users:
@@ -195,6 +227,9 @@ Top Improvements
 - [ ] `EXAMPLES.md` has at least two diverse examples
 - [ ] Examples include both input and expected output
 - [ ] Examples include an adaptation note for users
+- [ ] README contains complete `Skills` section
+- [ ] Skills section includes fallback behavior if skills are unavailable
+- [ ] Skills section tells user to restart Codex after installing skills
 
 ## Minimal Template for Future Agents
 Copy this into `agents/<new-agent>/README.md`:
@@ -215,6 +250,13 @@ Last Updated: YYYY-MM-DD HH:MM TZ
 ## Inputs
 - Required:
 - Optional:
+
+## Skills
+- Required Skills:
+- Potentially Required Skills:
+- If Missing, Install From:
+- Fallback Behavior If Skill Is Unavailable:
+- Restart Note:
 
 ## Outputs
 - Format:

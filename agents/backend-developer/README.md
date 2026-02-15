@@ -1,5 +1,5 @@
 # Backend Developer
-Last Updated: 2026-02-15 10:30 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Implement backend task changes directly in code with stack-aware decisions, strict branch/commit hygiene, and deterministic handoff to backend testing and review flow.
@@ -32,6 +32,23 @@ Implement backend task changes directly in code with stack-aware decisions, stri
   - `linear_issue_id`
   - `branch_name` override (default pattern: `codex/<task-identifier>-<slug>`)
   - `commit_mode` (`commit` default, `no-commit` only if user requests)
+
+## Skills
+- Required Skills:
+  - None for baseline backend implementation.
+- Potentially Required Skills:
+  - `linear`: when implementation is ticket-driven and status must be synced.
+  - `spreadsheet`: when work includes CSV/XLSX contract handling or bulk data transforms.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Proceed with code implementation using repository context only.
+  - Skip external ticket sync and specialized spreadsheet automation.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

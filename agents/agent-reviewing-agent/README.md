@@ -1,5 +1,5 @@
 # Agent Reviewing Agent
-Last Updated: 2026-02-14 12:54 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Review candidate agents for quality, completeness, and safety against repository standards.
@@ -22,6 +22,23 @@ Review candidate agents for quality, completeness, and safety against repository
 - Optional:
   - User-specific quality priorities (for example, strictness on safety)
 
+## Skills
+- Required Skills:
+  - None for baseline static review of agent files.
+- Potentially Required Skills:
+  - `skill-creator`: when reviewing agent + skill bundles together.
+  - `linear`: when converting review findings into tracked issues.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/skill-creator/SKILL.md` and `/skills/linear/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/skill-creator/SKILL.md` and `$CODEX_HOME/skills/linear/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Complete static file review and rubric scoring without external integrations.
+  - Flag skipped skill-assisted checks explicitly in the output.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
+
 ## Outputs
 - Format:
   - Findings list by severity
@@ -43,12 +60,17 @@ Review candidate agents for quality, completeness, and safety against repository
    - fields are relevant for this agent
    - template is append-only (no replacement required)
    - paths are portable (not machine-specific absolute paths)
-6. Validate `EXAMPLES.md` quality:
+6. Validate README `Skills` section quality:
+   - includes `Required Skills` and `Potentially Required Skills`
+   - includes `If Missing, Install From` with `/skills/...` and `$CODEX_HOME/skills/...`
+   - includes `Fallback Behavior If Skill Is Unavailable`
+   - includes explicit restart note after skill installation
+7. Validate `EXAMPLES.md` quality:
    - includes at least two diverse input/output examples
    - includes explicit guidance telling users to adapt examples to their own needs
-7. Evaluate each rubric criterion (0-2) with evidence.
-8. Compute total score and determine pass/fail threshold.
-9. Return findings and top improvements.
+8. Evaluate each rubric criterion (0-2) with evidence.
+9. Compute total score and determine pass/fail threshold.
+10. Return findings and top improvements.
 
 ## Constraints
 - Do not give a pass if any hard gate fails.
@@ -57,6 +79,7 @@ Review candidate agents for quality, completeness, and safety against repository
 - Do not invent evidence; tie each finding to actual file content.
 - Do not approve usage templates that require deleting placeholder text.
 - Do not approve agents missing diverse examples with user adaptation guidance.
+- Do not approve agents missing required skill metadata and fallback behavior.
 
 ## Validation
 - Confirm the agent folder contains:
@@ -68,6 +91,7 @@ Review candidate agents for quality, completeness, and safety against repository
   - In Scope
   - Out of Scope
   - Inputs
+  - Skills
   - Outputs
   - Workflow
   - Constraints
@@ -78,6 +102,14 @@ Review candidate agents for quality, completeness, and safety against repository
 - Confirm `USAGE_TEMPLATE.md` includes both:
   - `Blank Template`
   - `Filled Example`
+- Confirm `Skills` section includes:
+  - `Required Skills`
+  - `Potentially Required Skills`
+  - `If Missing, Install From`
+  - `Fallback Behavior If Skill Is Unavailable`
+  - `Restart Note`
+- Confirm `If Missing, Install From` includes both repo `/skills/<skill-name>/SKILL.md` and runtime `$CODEX_HOME/skills/<skill-name>/SKILL.md` guidance.
+- Confirm restart note explicitly tells users to restart Codex after installing skills.
 - Confirm blank template includes only relevant fields for that agent.
 - Confirm blank template is append-only and does not require replacing/deleting text.
 - Confirm template paths are portable and not machine-specific absolute paths.
@@ -102,6 +134,9 @@ Review candidate agents for quality, completeness, and safety against repository
 - If examples are missing or weak:
   - Signal: no `EXAMPLES.md`, fewer than two examples, weak diversity, or missing adaptation guidance
   - Action: return `FAIL` and request complete examples file
+- If skills metadata is missing or weak:
+  - Signal: no `Skills` section, missing required skill subsections, missing install guidance, or missing restart note
+  - Action: return `FAIL` and request a complete skills section
 - If standards are ambiguous:
   - Signal: conflicting instructions
   - Action: use stricter requirement from `/agents/agent-making-agent/README.md` and call out assumption

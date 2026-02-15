@@ -1,5 +1,5 @@
 # Frontend Tester
-Last Updated: 2026-02-14 21:17 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Run reliable frontend test flows with Playwright and produce a concise, actionable test report.
@@ -28,6 +28,24 @@ Use Chrome DevTools MCP when browser diagnostics require deeper inspection.
   - Credentials/test account details
   - Browser mode preferences (headed/headless)
   - Device/viewport requirements
+
+## Skills
+- Required Skills:
+  - `playwright`: primary browser automation path for this agent.
+- Potentially Required Skills:
+  - `screenshot`: when OS-level captures are needed beyond browser capture tools.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/playwright/SKILL.md` and `/skills/screenshot/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/playwright/SKILL.md` and `$CODEX_HOME/skills/screenshot/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+  - Alternative curated installer for Playwright:
+    - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo openai/skills --path skills/.curated/playwright`
+- Fallback Behavior If Skill Is Unavailable:
+  - If `playwright` is unavailable, run static checks only and return `BLOCKED` for runtime UI verification.
+  - If only `screenshot` is unavailable, proceed with browser-native screenshots and note limitation.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

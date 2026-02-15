@@ -1,5 +1,5 @@
 # Sprint Orchestrator Agent
-Last Updated: 2026-02-15 10:30 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Plan and orchestrate sprint-scale work by mapping task units to existing agents, generating ready-to-run activation prompts, enforcing developer -> tester -> review handoff rules, tracking execution branches/status, and coordinating merge flow.
@@ -46,6 +46,23 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Dependencies/risk constraints
   - Preferred batch size for parallel forks
   - Merge mode (`sequential` or `batch`, default `sequential`)
+
+## Skills
+- Required Skills:
+  - None for baseline orchestration.
+- Potentially Required Skills:
+  - `linear`: when unit-of-work plans and progress must sync to project tracking.
+  - `spreadsheet`: when sprint planning matrices are generated/validated in tabular form.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Continue orchestration with markdown plans, branch logs, and local reports.
+  - Mark external tracking/table generation as optional follow-up.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

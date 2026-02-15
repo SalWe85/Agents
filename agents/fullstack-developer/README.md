@@ -1,5 +1,5 @@
 # Fullstack Developer
-Last Updated: 2026-02-15 10:30 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Implement connected backend and frontend task changes directly with stack-aware decisions, strict task-branch hygiene, and deterministic tester/review handoff.
@@ -35,6 +35,25 @@ Implement connected backend and frontend task changes directly with stack-aware 
   - `branch_name` override
   - `tester_strategy` (`auto`, `backend-only`, `frontend-only`, `both`)
   - `commit_mode` (`commit` default)
+
+## Skills
+- Required Skills:
+  - None for baseline fullstack implementation.
+- Potentially Required Skills:
+  - `linear`: when task orchestration and status sync are ticket-driven.
+  - `figma-implement-design`: when frontend work requires strict design fidelity.
+  - `figma`: when extracting design context and assets.
+  - `playwright`: when validating integrated UI and flow behavior.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/linear/SKILL.md`, `/skills/figma-implement-design/SKILL.md`, `/skills/figma/SKILL.md`, `/skills/playwright/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md`, `$CODEX_HOME/skills/figma-implement-design/SKILL.md`, `$CODEX_HOME/skills/figma/SKILL.md`, `$CODEX_HOME/skills/playwright/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Continue implementation/testing using repository-only context.
+  - Report skipped design extraction, browser automation, or issue-sync steps.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:

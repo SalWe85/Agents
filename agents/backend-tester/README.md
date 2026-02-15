@@ -1,5 +1,5 @@
 # Backend Tester
-Last Updated: 2026-02-15 10:30 CET
+Last Updated: 2026-02-15 19:18 CET
 
 ## Mission
 Verify backend changes with configurable depth, add missing backend tests when needed, and produce evidence-backed pass/fail output with deterministic task-status handoff.
@@ -33,6 +33,23 @@ Verify backend changes with configurable depth, add missing backend tests when n
   - `branch_name` (if tests need to be added)
   - `commit_mode` (`commit` default when test files changed)
   - `extra_test_focus` (for example `perf-smoke`, `contract`, `security-smoke`)
+
+## Skills
+- Required Skills:
+  - None for baseline backend testing.
+- Potentially Required Skills:
+  - `linear`: when defects must be logged directly to project tracking.
+  - `spreadsheet`: when generating or validating structured test matrices.
+- If Missing, Install From:
+  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
+  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
+  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
+- Fallback Behavior If Skill Is Unavailable:
+  - Continue with local test execution and markdown reporting.
+  - Mark ticket-export and spreadsheet-export steps as skipped.
+- Restart Note:
+  - After installing any missing skill, restart Codex before rerunning this agent.
+
 
 ## Outputs
 - Format:
