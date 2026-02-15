@@ -25,11 +25,27 @@ Quick findings for using Codex threads with git worktrees.
 
 ## Cleanup and Safety
 
-- Archiving a thread does not delete its worktree.
+- Archiving a thread can trigger automatic cleanup when Codex cleanup eligibility conditions are met.
 - Deleting a worktree while a thread is attached can break that thread's live workspace context.
 - Move thread to another valid workspace before deleting its worktree.
 - Deleting a worktree does not delete committed branch history.
 - Uncommitted changes in a deleted worktree are lost.
+
+## Codex Automatic Worktree Cleanup (Docs Behavior)
+
+- Worktrees can consume significant disk space due to separate repository files, dependencies, and caches.
+- Codex keeps worktree count to a reasonable limit using automatic cleanup rules.
+- Worktrees are never cleaned up if:
+  - A pinned conversation is tied to the worktree.
+  - The worktree was added to the sidebar.
+- Worktrees become eligible for cleanup when either condition is true:
+  - The worktree is more than 4 days old.
+  - You have more than 10 worktrees.
+- When eligible, Codex may clean up:
+  - On thread archive.
+  - On app startup, if it finds a worktree with no associated threads.
+- Before cleanup, Codex saves a snapshot that can be restored later in a new worktree.
+- If you reopen a conversation after its worktree was cleaned up, Codex can offer a restore option.
 
 ## Broken Thread Context After Worktree Deletion
 
