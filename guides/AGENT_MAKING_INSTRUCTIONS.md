@@ -1,11 +1,22 @@
 # Agent Making Instructions
 
-This guide teaches programmers who are new to agents how to design useful, reliable agents.
-An agent as we define it and use it here differs from what most llms refer to as AGENTS and SKILLS and what we use here is a hybrid.
-AGENT.md files that codex expects are global or per project rules that define how codex will interact with the repo. Our approach completely abandons this idea and defines agents for specific units of work.
-SKILL.md files define what skill codex can use, how it will be called, how to use it and what for. Our approach keeps this mechanism entirely and relies on users setting up skills on their local configuration.
+This guide teaches programmers who are new to agents how to design useful, reliable agents. As the creator of this repo i mainly use Codex as an llm agent so i will be refering to LLM agentic plugin as Codex from now on but it really doesnt matter which plugin you are using. 
 
 ## What Is an Agent in This Repo?
+
+An agent as we define it and use it here differs from what most llms refer to as AGENTS and SKILLS and what we use here is a hybrid.
+AGENT.md files that Codex expects are global or per project rules that define how Codex will interact with the repo. Our approach completely abandons this idea and defines agents for specific units of work.
+SKILL.md files define what skill Codex can use, how it will be called, how to use it and what for. Our approach keeps this mechanism entirely and relies on users setting up skills on their local configuration. This repo contains a skills folder with instructions that Codex itself can use to install the required skills but a restart is needed after a skill is installed.
+
+## How to make a Superman Agent?
+
+The agents created here are give the user a tested and verified way if instructing Codex on how to do a unit of work.
+User can ensure he gives Codex enough information to 1-SHOT a task by asking codex itself to "Generate a prompt for agent XY to do task YZ".
+To expect 1-SHOT 100 % satisfactory results based on agents somoene else made for you is unrealistic so you should feel encouraged to modify all of the agents here by adding more instructions or modifying existing ones after you use them. Every time you arent happy with the result if the reason why you are unsatisfied can be generalised add it to that agents definition. 
+Furthermore feel free to edit the usage templates to fit your needs. you might want like 5 templates for an agent you use often. Feel free to rename the agents to whatever you like as well, but ask codex to rename them safely so he changes all name usages. 
+Examples make the agents perform MUCH MUCH MUCH better. Feel free to expand the EXAMPLES.md file with actual prompts you send to the agent and ask the agent to generate a summary of output so you can add it to the examples file paired with actual prompt you gave. In the examples a prompt should be paired with output to make the agent perform better.
+
+## How is an Agent designed in This Repo?
 
 In this project, an agent is a documented worker with:
 

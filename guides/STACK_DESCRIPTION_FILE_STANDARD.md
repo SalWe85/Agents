@@ -1,6 +1,8 @@
 # Stack Description File Standard
 
 Use this standard in any project where developer/tester agents run.
+Tehnology stack definition will prevent Codex from generating code in technologies you are unfamiliar with or dont want to have in you project.
+This is very important when starting a project from scratch as well as when migrating to agentic coding on existing projects that have hard limits for tech stack like for example new code must be Java 8 compatible which is a common occurance.
 
 ## Recommended Path
 - Primary: `/STACK.md`

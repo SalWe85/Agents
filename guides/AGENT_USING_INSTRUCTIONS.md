@@ -9,6 +9,8 @@ Quality depends on the quality of your task definition, constraints, and feedbac
 
 ## Before You Use an Agent
 
+Ask an agent to prepare a prompt for you to call an agent.
+
 Prepare these five things first:
 
 1. Goal: what outcome you need
@@ -18,6 +20,8 @@ Prepare these five things first:
 5. Validation: how you will check correctness
 
 If any are missing, results become noisy and unreliable.
+If you are asking Codex to prepare a prompt these 5 things dont need to be structured at all and you can get away with very broad and unspecific prompts that the Codex will turn into high quality agent instruction. REVIEW IT !!! Dont be lazy you will have better results. 
+If you have a well structured Jira/Linear task with an acceptance criteria your work is basicaly done. Just ask Codex to make a prompt for agent XY for task YZ and paste whatever he gives you into the thread you want to execute in.
 
 ## Prompting Pattern for Reliable Results
 

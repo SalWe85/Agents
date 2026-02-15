@@ -1,11 +1,11 @@
 # Using Worktrees And Agent Threads
 
-Quick findings for using Codex threads with git worktrees.
+Quick notes for using Codex threads with git worktrees.
 
 ## Core Rules
 
-- Prefer `Fork into new worktree` when creating a new agent thread.
-- Do not rely on switching an existing thread to a different worktree if you need restart-stable context.
+- Prefer `Fork into new worktree` when creating a new agent thread for paralel task runs.
+- Do not rely on switching an existing thread to a different worktree if you need restart-stable context.(Codex can change worktree it is on but its way of saving threads remembers what worktree a thread was made on and will switch back to that thread on restart)
 - If you want to keep threads under the same project context, stay in local/main thread flow.
 
 ## Why Fork Is Better
@@ -21,7 +21,7 @@ Quick findings for using Codex threads with git worktrees.
 - A new worktree can open in detached HEAD.
 - Detached HEAD is valid, but risky for orphan commits.
 - Before edits, attach a branch: `git switch -c codex/<task-name>`.
-- If asked to commit, the agent will handle branch safety, but users should still verify branch state.
+- If asked to commit, the agent will handle branch safety, but users should still verify branch state to avoid losing work on thread archiving.
 
 ## Cleanup and Safety
 
