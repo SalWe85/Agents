@@ -17,6 +17,7 @@ Inputs: harness_mode: developer_handoff
 Inputs: extra_test_focus: contract
 Inputs: task_list_path: /workspace/inventory-service/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: INV-118
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: branch_name: codex/inv-118-reservation-fixes
 Inputs: commit_mode: commit
 Constraints:
@@ -30,6 +31,7 @@ Output:
 ### Expected Output
 ```text
 Runs broad backend validation for changed reservation scope (lint, unit/integration, build).
+Checks Linear status/comments first and only proceeds when issue is in testing-ready state with a developer handoff comment.
 Adds/updates backend tests if uncovered behavior is detected.
 Writes /reports/BACKEND_TEST_REPORT.md with evidence and pass/fail outcomes.
 Updates task list to codex_test_done and codex_review_ready when checks pass.
@@ -62,6 +64,7 @@ Output:
 ### Expected Output
 ```text
 Inspects stack because stack file is missing and selects best-available backend test commands.
+If Linear issue is not in testing-ready state, exits early as NOT_READY before any test execution.
 Runs targeted auth regression checks plus requested security-smoke tests.
 Writes /reports/BACKEND_TEST_REPORT.md with explicit blocker details if failures remain.
 Sets codex_test_done and codex_review_ready only if all critical checks pass.

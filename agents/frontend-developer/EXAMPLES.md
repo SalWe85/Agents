@@ -15,6 +15,7 @@ Inputs: acceptance_criteria: Users can select multiple rows, apply status update
 Inputs: stack_file_path: /workspace/support-portal/STACK.md
 Inputs: task_list_path: /workspace/support-portal/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: UI-204
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: commit_mode: commit
 Constraints:
 - Implement changes directly.
@@ -30,8 +31,9 @@ Creates/switches task branch from main and implements UI/state changes.
 Runs lint, typecheck, unit/component tests, and build checks.
 Updates task list with codex_dev_done.
 Hands off to frontend-tester for behavior verification and evidence capture.
-Updates Linear issue UI-204 with completion summary.
 Commits grouped changes with UI-204 in commit messages.
+Pushes task branch before Linear update.
+Updates Linear issue UI-204 to testing-ready status with handoff comment containing branch + commit.
 ```
 
 ## Example 2: Stack Ambiguity Handling Before Implementation
@@ -61,4 +63,5 @@ Proposes preferred option and requests user decision before editing files.
 After decision, implements selected pattern, runs checks, and updates task list to codex_dev_done.
 If no UI test surface is meaningful, marks codex_review_ready directly; otherwise hands off to frontend-tester.
 Commits APP-52 scoped changes with APP-52 in commit messages.
+Pushes task branch and then updates Linear/testing handoff if linear_issue_id is provided.
 ```

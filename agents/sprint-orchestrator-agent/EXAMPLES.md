@@ -11,6 +11,7 @@ Goal: Plan Sprint 31 from Jira export and prepare agent activation prompts.
 Inputs: Sprint task source: /inputs/jira/sprint-31.csv
 Inputs: Agent root path: /agents
 Inputs: Standards source: /agents/agent-making-agent/README.md
+Inputs: Shared Linear workflow path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: Team capacity constraints: 8 engineers, max 5 parallel forks.
 Inputs: Merge mode: sequential
 Inputs: Handoff policy: developer -> tester -> review-ready (skip tester only for no-test-surface tasks)
@@ -22,6 +23,7 @@ Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_AGENT_ACTIVATIONS.md, /reports/
 ```text
 Creates /reports/SPRINT_PLAN.md with UOW-001..UOW-0NN, dependencies, priorities, and execution waves.
 Creates /reports/SPRINT_AGENT_ACTIVATIONS.md with one filled activation prompt per UOW and FORK-UOW identifiers.
+Includes shared `linear_workflow_path` in developer/tester activation prompts so status names are centrally managed.
 Creates /reports/SPRINT_EXECUTION_LOG.md with branch, owner, status, substatus (`codex_dev_done`, `codex_test_done`, `codex_review_ready`), PR, base/head sha, and merge status per UOW.
 Creates /reports/SPRINT_MERGE_PLAN.md with merge mode, merge order, and merge gate checks.
 Creates /reports/SPRINT_MERGE_RESULT.md for merged/skipped/blocked tracking.
@@ -38,6 +40,7 @@ Goal: Replan unresolved tickets from previous sprint into a reduced two-week exe
 Inputs: Sprint task source: /inputs/backlog/carry-over.md
 Inputs: Agent root path: /agents
 Inputs: Standards source: /agents/agent-making-agent/README.md
+Inputs: Shared Linear workflow path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: Team capacity constraints: 3 parallel forks max, risk-first ordering.
 Inputs: Merge mode: batch
 Inputs: Handoff policy: developer -> tester -> review-ready (skip tester only for no-test-surface tasks)

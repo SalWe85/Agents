@@ -1,5 +1,5 @@
 # Sprint Orchestrator Agent
-Last Updated: 2026-02-15 19:18 CET
+Last Updated: 2026-02-16 12:10 CET
 
 ## Mission
 Plan and orchestrate sprint-scale work by mapping task units to existing agents, generating ready-to-run activation prompts, enforcing developer -> tester -> review handoff rules, tracking execution branches/status, and coordinating merge flow.
@@ -46,6 +46,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Dependencies/risk constraints
   - Preferred batch size for parallel forks
   - Merge mode (`sequential` or `batch`, default `sequential`)
+  - Shared Linear workflow file path (`/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
 
 ## Skills
 - Required Skills:
@@ -77,6 +78,11 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Return manual ticket-sync instructions.
 - Restart Note:
   - After MCP setup/config changes, restart Codex before rerunning this agent.
+
+## Shared Workflow Config
+- Use a single shared workflow file so all generated activations use the same Linear statuses:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
+- When present, orchestrator should include `linear_workflow_path` in every generated activation prompt for developer/tester agents.
 
 
 ## Outputs
@@ -127,29 +133,31 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 
 ## Workflow
 1. Parse sprint inputs and normalize tasks into candidate units.
-2. Scan `/agents/*/README.md` to understand available capabilities.
-3. Match each unit to the best-fit primary developer agent using explicit selection reasoning.
-4. Assign deterministic unit IDs (`UOW-001`, `UOW-002`, ...).
-5. Build handoff chains per unit:
+2. Resolve shared Linear workflow path (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`).
+3. Scan `/agents/*/README.md` to understand available capabilities.
+4. Match each unit to the best-fit primary developer agent using explicit selection reasoning.
+5. Assign deterministic unit IDs (`UOW-001`, `UOW-002`, ...).
+6. Build handoff chains per unit:
    - implementation -> testing -> review-ready
    - direct implementation -> review-ready only for no-test-surface tasks
-6. Build dependency and execution-wave ordering.
-7. Produce draft `/reports/SPRINT_PLAN.md`.
-8. Show concise confirmation summary:
+7. Build dependency and execution-wave ordering.
+8. Produce draft `/reports/SPRINT_PLAN.md`.
+9. Show concise confirmation summary:
    - total units
    - mapped agents
    - high-risk units
    - unresolved ambiguities
-9. Wait for user confirmation before finalizing activations.
-10. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
-11. Require each activation prompt to include:
+10. Wait for user confirmation before finalizing activations.
+11. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
+12. Require each activation prompt to include:
     - feature-branch creation from default branch
     - task-id commit message requirement
     - task-list updates for `codex_dev_done` / `codex_test_done` / `codex_review_ready`
-12. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
-13. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
-14. On status updates, refresh merge eligibility only when substatus reaches `codex_review_ready`.
-15. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
+    - `linear_workflow_path` pointing to shared workflow file for developer/tester agents
+13. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
+14. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
+15. On status updates, refresh merge eligibility only when substatus reaches `codex_review_ready`.
+16. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
 
 ## Constraints
 - Plan-only agent: do not execute implementation tasks.
@@ -206,6 +214,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - One filled activation prompt per `UOW-ID`.
   - Prompt includes objective, inputs, constraints, and output format.
   - Each prompt includes `FORK-UOW-###` and branch suggestion.
+  - Developer/tester prompts include `linear_workflow_path` for shared status configuration.
   - Includes warning about inherited context and lightweight-fork recommendation.
 - `SPRINT_EXECUTION_LOG.md` checks:
   - One row per `UOW-ID` with all mandatory tracking fields.

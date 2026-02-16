@@ -1,5 +1,5 @@
 # Frontend Developer
-Last Updated: 2026-02-15 19:18 CET
+Last Updated: 2026-02-16 12:10 CET
 
 ## Mission
 Implement frontend task changes directly with stack-aware decisions, task-scoped branch/commit discipline, and deterministic handoff to frontend testing and review.
@@ -9,6 +9,7 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
 - Create or switch to a task-specific branch from the specified default branch.
 - Keep commits grouped by task and include task identifier in commit messages.
 - Run relevant frontend checks before completion (`lint`, `typecheck`, `unit/component tests`, `build`).
+- Commit and push task branch before updating Linear issue status/comment.
 - Update orchestrator task lists if present.
 - Update Linear issue status/comment when working from Linear task input.
 - Handoff completed work to `frontend-tester` unless no meaningful UI test surface exists.
@@ -31,8 +32,18 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
   - `design_source` (Figma/ticket/reference)
   - `task_list_path`
   - `linear_issue_id`
+  - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `linear_ready_for_test_status` (optional override; defaults to workflow `agent_work_done_status`)
   - `branch_name` override
   - `commit_mode` (`commit` default)
+
+## Shared Workflow Config
+- Shared Linear workflow defaults are read from:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
+- Override precedence:
+  1. explicit input values (for example `linear_ready_for_test_status`)
+  2. values from `linear_workflow_path`
+  3. built-in fallback defaults in this agent
 
 ## Skills
 - Required Skills:
@@ -78,8 +89,9 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
     - `codex_dev_done`
     - next handoff target (`frontend-tester` or direct `codex_review_ready`)
   - Linear update (if issue ID provided):
-    - issue moved to review-oriented state
-    - completion note with checks run
+    - on task start, status moved to workflow `agent_working_status` (or equivalent active-dev state)
+    - issue moved to testing-ready state (for example `Agent work DONE`)
+    - completion note with checks run, tester target, branch, and head commit
 - Location:
   - Source files in repo
   - Optional `/reports/SPRINT_EXECUTION_LOG.md`
@@ -89,24 +101,29 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
 
 ## Workflow
 1. Validate task inputs and acceptance criteria.
-2. Resolve stack context in this order:
+2. Resolve Linear workflow config from `linear_workflow_path` when provided/readable.
+3. Resolve stack context in this order:
    - `stack_file_path`
    - `/STACK.md`
    - `/docs/STACK.md`
    - repository inspection (`package.json`, workspace configs, framework files)
-3. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
-4. If stack or framework choice is ambiguous and materially affects implementation, provide recommendation and request user choice before editing.
-5. Create/switch task branch from `default_branch` (`codex/<task-id>-<slug>` unless overridden).
-6. Implement frontend changes in reviewable increments.
-7. Run relevant checks:
+4. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
+5. If stack or framework choice is ambiguous and materially affects implementation, provide recommendation and request user choice before editing.
+6. Create/switch task branch from `default_branch` (`codex/<task-id>-<slug>` unless overridden).
+7. If `linear_issue_id` is provided, set issue status to workflow `agent_working_status` (or equivalent active-dev state).
+8. Implement frontend changes in reviewable increments.
+9. Run relevant checks:
    - lint and static checks
    - type checks
    - unit/component tests in scope
    - build/compile check
-8. Update task list status to `codex_dev_done` when task list exists.
-9. If testable UI behavior changed, hand off to `frontend-tester`; otherwise move directly to `codex_review_ready`.
-10. Update Linear issue status/comment if `linear_issue_id` provided.
-11. Commit grouped task-only changes with `task_identifier` in commit messages.
+10. Update task list status to `codex_dev_done` when task list exists.
+11. If testable UI behavior changed, hand off to `frontend-tester`; otherwise move directly to `codex_review_ready`.
+12. Commit grouped task-only changes with `task_identifier` in commit messages.
+13. Push task branch to remote.
+14. Update Linear issue status/comment if `linear_issue_id` provided:
+   - move issue to `linear_ready_for_test_status` (or workflow `agent_work_done_status`)
+   - include tester target, branch, and head commit in handoff comment
 
 ## Constraints
 - Always branch from the specified `default_branch` at task start.
@@ -114,6 +131,8 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
 - Every commit message must include `task_identifier`.
 - Do not mark task complete without running relevant checks.
 - Do not skip task list/Linear updates when applicable.
+- Do not mark Linear testing-ready until the branch has been pushed and is available to testers.
+- Do not leave issue in active development state after successful implementation handoff.
 - Do not use destructive git commands or force push without explicit authorization.
 - When adding unfamiliar libraries/APIs, consult Context7 first when available instead of guessing usage.
 - If design requirements are unclear, ask for clarification instead of inventing major UX changes.
@@ -134,6 +153,9 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
   - task list updated with `codex_dev_done` when present
   - handoff target set (`frontend-tester` or review-ready)
   - Linear issue updated when provided
+  - Linear status moved to workflow `agent_working_status` on task start
+  - Linear status moved to testing-ready state
+  - handoff comment includes branch and head commit
 
 ## Failure Handling
 - Missing required inputs:
@@ -148,6 +170,9 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
 - Branch creation/sync failure:
   - Signal: cannot create/switch branch from default branch
   - Action: stop and report required git remediation
+- Branch push failure:
+  - Signal: push rejected or remote unavailable
+  - Action: report blocker and do not mark Linear as testing-ready
 - Task tracker/Linear update blocked:
   - Signal: file missing or API not accessible
   - Action: report precise manual follow-up needed
@@ -156,6 +181,7 @@ Implement frontend task changes directly with stack-aware decisions, task-scoped
 - Frontend implementation is complete and validated.
 - Task branch and commit message requirements are satisfied.
 - Task list and Linear updates are completed where applicable.
+- Task branch is committed and pushed before Linear tester handoff.
 - Handoff is explicit: `codex_dev_done` then `codex_test_done` (via tester) or direct `codex_review_ready` when no test surface exists.
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.

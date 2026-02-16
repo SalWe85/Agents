@@ -15,6 +15,7 @@ Inputs: acceptance_criteria: Endpoint supports page, pageSize, status filter, an
 Inputs: stack_file_path: /workspace/ledger-api/STACK.md
 Inputs: task_list_path: /workspace/ledger-api/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: LED-312
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: commit_mode: commit
 Constraints:
 - Implement changes directly.
@@ -31,8 +32,9 @@ Implements endpoint changes and related tests.
 Runs lint/test/build commands from stack file guidance.
 Updates /reports/SPRINT_EXECUTION_LOG.md substatus to codex_dev_done.
 Hands off to backend-tester with explicit changed-file scope.
-Updates Linear issue LED-312 with status for review and completion comment.
 Creates task-scoped commits with AG-312 in commit messages.
+Pushes task branch before Linear update.
+Updates Linear issue LED-312 to testing-ready status with handoff comment containing branch + commit.
 ```
 
 ## Example 2: Ambiguous Stack Detection Requiring User Choice
@@ -63,4 +65,5 @@ Returns recommended option and prompts user to choose implementation path before
 After user decision, creates/switches task branch from develop, implements selected path, and runs validations.
 Updates task list status to codex_dev_done and hands off to backend-tester.
 Commits only SEC-77 scoped changes with SEC-77 in commit messages.
+Pushes task branch and then updates Linear/testing handoff if linear_issue_id is provided.
 ```

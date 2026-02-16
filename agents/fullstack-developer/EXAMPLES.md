@@ -15,6 +15,7 @@ Inputs: acceptance_criteria: Only approvers can approve, state transitions are a
 Inputs: stack_file_path: /workspace/billing-app/STACK.md
 Inputs: task_list_path: /workspace/billing-app/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: BILL-55
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: tester_strategy: both
 Inputs: commit_mode: commit
 Constraints:
@@ -29,10 +30,10 @@ Output:
 ```text
 Creates/switches task branch from main and implements backend + server-rendered UI updates.
 Runs backend and frontend relevant checks.
+Commits and pushes the task branch before ticket handoff.
 Updates task list to codex_dev_done.
-Hands off to backend-tester and frontend-tester.
+Moves Linear ticket into testing-ready state and hands off to backend-tester and frontend-tester with branch + commit details.
 After testing completion, marks codex_review_ready.
-Updates Linear issue BILL-55 with status/comment.
 Commits task-scoped changes with BILL-55 in commit messages.
 ```
 
@@ -63,6 +64,8 @@ Inspects stack due to missing stack file; if ambiguity exists, proposes preferre
 Implements backend-heavy changes and limited UI update on a task branch from develop.
 Runs full backend checks and scoped frontend checks.
 Updates task list to codex_dev_done and hands off at least to backend-tester.
+Commits and pushes the task branch before Linear handoff.
+Moves Linear ticket to testing-ready state and includes exact branch in tester handoff comment.
 Moves to codex_review_ready after required tester outputs are complete.
 Commits PRC-90 scoped changes with PRC-90 in commit messages.
 ```

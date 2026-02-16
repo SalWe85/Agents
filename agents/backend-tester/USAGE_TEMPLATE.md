@@ -13,9 +13,16 @@ Inputs: harness_mode: developer_handoff
 Inputs: extra_test_focus:
 Inputs: task_list_path: /reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id:
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: linear_ready_statuses: Agent work DONE, Agent testing
+Inputs: post_not_ready_comment: true
 Inputs: branch_name:
 Inputs: commit_mode: commit
 Constraints:
+- Use `linear_workflow_path` as the default status source; override only when necessary.
+- Check Linear status + latest developer handoff comment before running any test command.
+- If task is not ready, stop early and report NOT_READY without executing tests.
+- Prefer branch from latest developer handoff comment; use Inputs: branch_name only if handoff comment lacks branch.
 - Run configurable backend checks with evidence.
 - In developer_handoff mode, run fullest feasible suite for changed backend scope.
 - Add/adjust tests when coverage gaps are found.
@@ -24,7 +31,7 @@ Constraints:
 Output:
 - /reports/BACKEND_TEST_REPORT.md
 - Optional test code changes
-- Task status update (`codex_test_done` and `codex_review_ready` on pass)
+- Task status update (`NOT_READY` early exit, or `codex_test_done` and `codex_review_ready` on pass)
 ```
 
 ## Filled Example
@@ -40,9 +47,16 @@ Inputs: harness_mode: developer_handoff
 Inputs: extra_test_focus: contract
 Inputs: task_list_path: /workspace/payments-service/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: PAY-221
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: linear_ready_statuses: Agent work DONE, Agent testing
+Inputs: post_not_ready_comment: true
 Inputs: branch_name: codex/uow-014-webhook-idempotency
 Inputs: commit_mode: commit
 Constraints:
+- Use `linear_workflow_path` as the default status source; override only when necessary.
+- Check Linear status + latest developer handoff comment before running any test command.
+- If task is not ready, stop early and report NOT_READY without executing tests.
+- Prefer branch from latest developer handoff comment; use Inputs: branch_name only if handoff comment lacks branch.
 - Run configurable backend checks with evidence.
 - In developer_handoff mode, run fullest feasible suite for changed backend scope.
 - Add/adjust tests when coverage gaps are found.
@@ -51,5 +65,5 @@ Constraints:
 Output:
 - /reports/BACKEND_TEST_REPORT.md
 - Optional test code changes
-- Task status update (`codex_test_done` and `codex_review_ready` on pass)
+- Task status update (`NOT_READY` early exit, or `codex_test_done` and `codex_review_ready` on pass)
 ```

@@ -65,6 +65,18 @@ See `/agents/agent-making-agent/README.md` for the full checklist.
 3. Document how the agent should be used and validated.
 4. Keep changes small and commit frequently.
 
+## Shared Linear Workflow
+
+If you use Linear, keep workflow statuses in one place:
+
+- `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
+
+Agents that synchronize Linear state should receive:
+
+- `Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
+
+Update that single file when your Linear status names change (for example `Agent work DONE`, `Agent testing`, `Agent test DONE`), then rerun agents without editing each agent definition.
+
 ## Recommended Naming Conventions
 
 - Agent folders: lowercase-kebab-case (example: `bug-finder-agent`)

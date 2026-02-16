@@ -1,11 +1,12 @@
 # Backend Tester
-Last Updated: 2026-02-15 19:18 CET
+Last Updated: 2026-02-16 12:10 CET
 
 ## Mission
-Verify backend changes with configurable depth, add missing backend tests when needed, and produce evidence-backed pass/fail output with deterministic task-status handoff.
+Verify backend changes with configurable depth, add missing backend tests when needed, and produce evidence-backed pass/fail output with deterministic readiness gating and task-status handoff.
 
 ## In Scope
 - Execute backend validation based on requested scope (targeted or full).
+- If `linear_issue_id` is provided, check Linear status and latest handoff comments before running any tests.
 - Create or update backend tests for newly introduced behavior when coverage gaps are found.
 - Run lint, test, and build/compile checks for backend code.
 - In developer-handoff mode, run the fullest feasible suite for changed backend scope.
@@ -30,9 +31,23 @@ Verify backend changes with configurable depth, add missing backend tests when n
   - `harness_mode` (`targeted`, `full`, `developer_handoff`)
   - `task_list_path`
   - `linear_issue_id`
+  - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `linear_ready_statuses` (optional override; defaults to workflow-derived readiness set)
+  - `post_not_ready_comment` (`true` default)
   - `branch_name` (if tests need to be added)
   - `commit_mode` (`commit` default when test files changed)
   - `extra_test_focus` (for example `perf-smoke`, `contract`, `security-smoke`)
+
+## Shared Workflow Config
+- Shared Linear workflow defaults are read from:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
+- For readiness gate defaults:
+  - use workflow `agent_work_done_status`
+  - optionally treat workflow `agent_testing_status` as rerun-ready state
+- Override precedence:
+  1. explicit input values (for example `linear_ready_statuses`)
+  2. values from `linear_workflow_path`
+  3. built-in fallback defaults in this agent
 
 ## Skills
 - Required Skills:
@@ -75,13 +90,16 @@ Verify backend changes with configurable depth, add missing backend tests when n
     - pass/fail by scenario
     - failures with reproduction and likely root cause
     - coverage gaps and added tests
-    - final recommendation (`BLOCKED`, `READY_FOR_REVIEW`)
+    - final recommendation (`NOT_READY`, `BLOCKED`, `READY_FOR_REVIEW`)
   - Optional test code additions/updates when coverage is missing.
   - Task list updates when present:
     - set `codex_test_done` when test phase passes
     - set `codex_review_ready` when ready for review
   - Linear update when issue ID provided:
-    - test completion comment with report summary
+    - not-ready comment when readiness gate fails (optional via `post_not_ready_comment`)
+    - on test start after readiness gate pass, status moved to workflow `agent_testing_status`
+    - on passing test phase, status moved to workflow `agent_test_done_status`
+    - test completion comment with report summary when tests ran
 - Location:
   - Report at `/reports/BACKEND_TEST_REPORT.md`
   - Test files in backend test directories
@@ -92,41 +110,58 @@ Verify backend changes with configurable depth, add missing backend tests when n
 
 ## Workflow
 1. Validate required inputs and load changed-scope context.
-2. Resolve stack/test tooling from stack file or repo inspection.
-3. Determine test depth by `harness_mode`:
+2. Resolve Linear workflow config from `linear_workflow_path` when provided/readable.
+3. If `linear_issue_id` is provided, execute readiness gate before any test command:
+   - read current issue status and recent comments first
+   - require both:
+     - issue status in `linear_ready_statuses` (or closest team equivalent)
+     - latest developer handoff comment indicates testing should begin and includes branch name
+   - if not ready, post one concise not-ready comment (when `post_not_ready_comment=true`) and stop without executing tests
+   - ignore older tester-authored blocked comments once a newer developer handoff + ready status exists
+   - use branch from latest valid developer handoff comment as test branch; use `branch_name` only as fallback
+4. Resolve stack/test tooling from stack file or repo inspection.
+5. Determine test depth by `harness_mode`:
    - `targeted`: focused tests for specified modules/endpoints
    - `full`: broad backend suite
    - `developer_handoff`: run fullest feasible suite for changed backend area (default when invoked after developer completion)
-4. If test files must be added/updated, create/switch to task branch from `default_branch` (or continue provided branch) and implement tests.
-5. Run backend validation commands:
+6. If test files must be added/updated, create/switch to task branch from `default_branch` (or continue provided branch) and implement tests.
+7. If `linear_issue_id` is provided and readiness gate passed, set issue status to workflow `agent_testing_status`.
+8. Run backend validation commands:
    - lint/static checks
    - unit/integration tests
    - compile/build checks
    - optional extra focus checks when requested
-6. Write `/reports/BACKEND_TEST_REPORT.md`.
-7. Update task list statuses when present:
+9. Write `/reports/BACKEND_TEST_REPORT.md`.
+10. Update task list statuses when present:
    - passing: `codex_test_done`, then `codex_review_ready`
    - failing/blocking: keep out of review-ready and mark blocked
-8. Update Linear issue with test outcome summary when provided.
-9. If tests were added/updated and `commit_mode=commit`, create task-scoped commit message including `task_identifier`.
+11. Update Linear issue with test outcome summary when provided:
+   - passing: move issue to workflow `agent_test_done_status`
+12. If tests were added/updated and `commit_mode=commit`, create task-scoped commit message including `task_identifier`.
 
 ## Constraints
 - If invoked from developer handoff, prefer maximum practical test coverage for changed backend scope.
+- If `linear_issue_id` is present, do not execute any backend test command before readiness gate completes.
 - Do not mark `codex_test_done` when critical checks fail.
 - Do not claim coverage without evidence.
 - Test code changes must remain scoped to task behavior.
 - Any commit must include `task_identifier` in commit message.
 - Do not use destructive git operations.
 - No force push without explicit permission.
+- A tester-authored blocked comment must never block execution when a newer developer handoff and ready status are present.
 
 ## Validation
 - Input and scope contract is complete.
+- Readiness gate executed first whenever `linear_issue_id` is provided.
+- Readiness decision includes both status and latest developer handoff comment check.
 - Stack/toolchain commands are detected or gaps documented.
 - Report file exists at `/reports/BACKEND_TEST_REPORT.md` with mandatory sections.
 - Every failed scenario includes reproducible steps and evidence.
 - When test phase passes:
   - task list is updated to `codex_test_done` then `codex_review_ready` if task list exists
 - Linear issue updated when `linear_issue_id` is present.
+  - issue set to workflow `agent_testing_status` before executing tests
+  - issue set to workflow `agent_test_done_status` on passing test phase
 - Commit hygiene checks pass when test files changed.
 
 ## Failure Handling
@@ -136,6 +171,9 @@ Verify backend changes with configurable depth, add missing backend tests when n
 - Stack/tooling ambiguity:
   - Signal: conflicting test runner/build systems with materially different coverage implications
   - Action: provide recommendation and request user choice
+- Task not ready for test:
+  - Signal: issue status not in ready set or no valid developer handoff comment with branch
+  - Action: stop immediately, post concise not-ready note (optional), and wait for rerun after developer handoff
 - No runnable test commands:
   - Signal: project lacks executable test tooling in current environment
   - Action: report blocker, add minimal feasible checks, and mark `NEEDS_MANUAL_VERIFICATION`
@@ -148,6 +186,7 @@ Verify backend changes with configurable depth, add missing backend tests when n
 
 ## Definition of Done
 - Backend test phase is complete with evidence in `/reports/BACKEND_TEST_REPORT.md`.
+- Or, task is explicitly marked `NOT_READY` with no test commands executed because readiness gate failed.
 - Coverage for changed behavior is sufficient or gaps are explicitly documented.
 - Task transitions reflect real state (`codex_test_done` and `codex_review_ready` only when justified).
 - Linear issue and/or task list updates are applied where required.
