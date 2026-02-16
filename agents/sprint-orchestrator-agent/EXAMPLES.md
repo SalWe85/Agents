@@ -1,61 +1,68 @@
 # Examples
 
-Use these as starting points. Review them carefully and adapt sprint scope, constraints, and execution waves to your project.
+Use these as starting points. Adapt sprint scope, dependencies, and merge policy to your repository.
 
-## Example 1: Full Sprint Jira Orchestration
+## Example 1: Linear-First Sprint Orchestration
 
 ### Input
 ```text
 Agent: sprint-orchestrator-agent
-Goal: Plan Sprint 31 from Jira export and prepare agent activation prompts.
+Goal: Orchestrate Sprint 31 from Jira export and publish role packets directly to Linear issues.
 Inputs: Sprint task source: /inputs/jira/sprint-31.csv
 Inputs: Agent root path: /agents
 Inputs: Standards source: /agents/agent-making-agent/README.md
-Inputs: Shared Linear workflow path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
-Inputs: Shared worktree policy path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
-Inputs: Team capacity constraints: 8 engineers, max 5 parallel forks.
+Inputs: tracking_mode: linear
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
+Inputs: Team capacity constraints: max 5 active units, risk-first ordering.
 Inputs: Merge mode: sequential
-Inputs: Handoff policy: developer -> tester -> review-ready (skip tester only for no-test-surface tasks)
-Constraints: Planning only. Do not execute subagent implementation work.
-Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_AGENT_ACTIVATIONS.md, /reports/SPRINT_EXECUTION_LOG.md, /reports/SPRINT_MERGE_PLAN.md, and /reports/SPRINT_MERGE_RESULT.md
+Inputs: review_required: false
+Inputs: pr_base_branch: main
+Inputs: Handoff policy: developer -> tester -> PR-ready (optional review only when requested)
+Constraints: Planning/orchestration only. Do not execute task implementation. Publish `DEV_TASK` and `TEST_TASK` packets as `AGENT_EVENT_V1` comments on each Linear issue. Publish `REVIEW_TASK` only when explicitly requested. Create pull requests for done units and include task description + expected outcome from issue/task packet in PR body. Keep PR body intent-only and do not include git diff summaries.
+Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_ISSUE_PACKETS.md, /reports/SPRINT_MERGE_PLAN.md, /reports/SPRINT_MERGE_RESULT.md
 ```
 
 ### Expected Output
 ```text
-Creates /reports/SPRINT_PLAN.md with UOW-001..UOW-0NN, dependencies, priorities, and execution waves.
-Creates /reports/SPRINT_AGENT_ACTIVATIONS.md with one filled activation prompt per UOW and FORK-UOW identifiers.
-Includes shared `linear_workflow_path` in developer/tester activation prompts so status names are centrally managed.
-Includes shared `worktree_policy_path` in developer/tester activation prompts so agents do not create new worktrees without permission.
-Creates /reports/SPRINT_EXECUTION_LOG.md with branch, owner, status, substatus (`codex_dev_done`, `codex_test_done`, `codex_review_ready`), PR, base/head sha, and merge status per UOW.
-Creates /reports/SPRINT_MERGE_PLAN.md with merge mode, merge order, and merge gate checks.
-Creates /reports/SPRINT_MERGE_RESULT.md for merged/skipped/blocked tracking.
-Includes warning that forked threads inherit context and recommends forking subagents from a lightweight launcher thread.
-Routes units through developer -> tester -> review-ready unless task has no meaningful test surface.
+Creates /reports/SPRINT_PLAN.md with UOW IDs, dependencies, priorities, and mapped agents.
+Posts structured `DEV_TASK`/`TEST_TASK` packets to each issue with packet_version, and `REVIEW_TASK` only when requested.
+Creates /reports/SPRINT_ISSUE_PACKETS.md manifest containing packet routing and versions.
+Creates pull requests for done units and ensures PR body includes task description and expected outcome, without git diff summaries.
+Creates /reports/SPRINT_MERGE_PLAN.md with deterministic merge order and gate checks.
+Creates /reports/SPRINT_MERGE_RESULT.md for merge progress tracking.
 ```
 
-## Example 2: Partial Replan For Carry-Over Tickets
+## Example 2: Local Fallback Orchestration (No Linear)
 
 ### Input
 ```text
 Agent: sprint-orchestrator-agent
-Goal: Replan unresolved tickets from previous sprint into a reduced two-week execution plan.
+Goal: Plan carry-over sprint work without Linear connectivity.
 Inputs: Sprint task source: /inputs/backlog/carry-over.md
 Inputs: Agent root path: /agents
 Inputs: Standards source: /agents/agent-making-agent/README.md
-Inputs: Shared Linear workflow path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
-Inputs: Shared worktree policy path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
-Inputs: Team capacity constraints: 3 parallel forks max, risk-first ordering.
+Inputs: tracking_mode: local
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
+Inputs: Team capacity constraints: max 3 parallel units.
 Inputs: Merge mode: batch
-Inputs: Handoff policy: developer -> tester -> review-ready (skip tester only for no-test-surface tasks)
-Constraints: Planning only. No task execution.
-Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_AGENT_ACTIVATIONS.md, /reports/SPRINT_EXECUTION_LOG.md, /reports/SPRINT_MERGE_PLAN.md, and /reports/SPRINT_MERGE_RESULT.md
+Inputs: review_required: true
+Inputs: pr_base_branch: main
+Inputs: Handoff policy: developer -> tester -> review -> PR-ready
+Constraints: Planning/orchestration only. Write packet files under `/reports/issues/<ISSUE-ID>/` and initialize local state/event files. Create pull requests for done units and include task description + expected outcome from local issue packet in PR body. Keep PR body intent-only and do not include git diff summaries.
+Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_ISSUE_PACKETS.md, /reports/SPRINT_MERGE_PLAN.md, /reports/SPRINT_MERGE_RESULT.md
 ```
 
 ### Expected Output
 ```text
-Produces compact plan focused on high-priority carry-over units with explicit UOW IDs.
-Maps each unit to the best-fit existing agent and marks unmapped work clearly.
-Generates ready-to-use activation prompts with branch suggestions and confirmation checklist.
-Includes batch merge waves and blocked-item tracking in merge reports.
-Ensures each unit has explicit handoff path and substatus progression for execution tracking.
+Creates /reports/SPRINT_PLAN.md with UOW IDs and routing.
+Creates per-issue packet files (`DEV_TASK.yaml`, `TEST_TASK.yaml`, and optional `REVIEW_TASK.yaml` when requested) under /reports/issues/<ISSUE-ID>/.
+Initializes /reports/issues/<ISSUE-ID>/state.yaml and /reports/issues/<ISSUE-ID>/events.jsonl.
+Creates pull requests for done units with task description and expected outcome in PR body, without git diff summaries.
+Creates /reports/SPRINT_ISSUE_PACKETS.md manifest and merge plan/result reports.
 ```

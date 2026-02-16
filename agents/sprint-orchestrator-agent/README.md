@@ -1,39 +1,36 @@
 # Sprint Orchestrator Agent
-Last Updated: 2026-02-16 12:20 CET
+Last Updated: 2026-02-16 15:25 CET
 
 ## Mission
-Plan and orchestrate sprint-scale work by mapping task units to existing agents, generating ready-to-run activation prompts, enforcing developer -> tester -> review handoff rules, tracking execution branches/status, and coordinating merge flow.
+Plan and orchestrate sprint-scale work by mapping units to existing agents, generating deterministic role task packets, enforcing developer -> tester handoff rules, creating pull requests for completed tasks, and coordinating merge flow.
 
 ## In Scope
 - Ingest sprint task inputs (for example Jira exports or structured task lists).
-- Discover available agents in `/agents` and infer their best-fit use.
+- Discover available agents in `/agents` and infer best-fit mapping.
 - Split sprint work into explicit units (`UOW-001`, `UOW-002`, ...).
-- Map each work unit to one primary agent.
-- Generate concise sprint output files:
+- Map each work unit to one primary developer agent.
+- Generate sprint outputs:
   - `/reports/SPRINT_PLAN.md`
-  - `/reports/SPRINT_AGENT_ACTIVATIONS.md`
-  - `/reports/SPRINT_EXECUTION_LOG.md`
+  - `/reports/SPRINT_ISSUE_PACKETS.md`
   - `/reports/SPRINT_MERGE_PLAN.md`
   - `/reports/SPRINT_MERGE_RESULT.md`
-- Enforce a two-phase flow:
-  - Draft plan
-  - Finalized plan after user confirmation
-- Add thread/fork identifiers per unit so parallel execution is easy to track.
-- Track branch ownership and completion state per unit.
-- Route implementation units to developer agents first, then tester/review agents according to testability.
-- Enforce per-unit substatus progression:
-  - `codex_dev_done`
-  - `codex_test_done`
-  - `codex_review_ready`
-- Support merge coordination modes:
-  - `sequential` (default, merge one unit at a time as ready)
-  - `batch` (merge a selected ready set in one merge wave)
+- Publish role task packets per issue:
+  - `DEV_TASK`
+  - `TEST_TASK`
+  - `REVIEW_TASK` (only when explicitly requested)
+- Create pull requests for units that pass required done gates.
+- Ensure pull request bodies include only task description and expected outcome from issue/task source when available (no code-diff summary in PR body).
+- Support tracking modes:
+  - `linear`: Linear status + structured Linear comments are canonical.
+  - `local`: per-issue local files are canonical.
+- Keep shared sprint files as orchestrator-only snapshots, never worker state.
 
 ## Out of Scope
-- Executing subagent tasks.
-- Creating or managing actual app threads automatically.
+- Executing subagent implementation tasks.
 - Editing product code.
 - Running destructive git/worktree cleanup actions.
+- Forcing merge decisions without explicit user instruction.
+- Forcing mandatory reviewer handoff when not explicitly requested.
 
 ## Inputs
 - Required:
@@ -41,232 +38,177 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Agent root path (`/agents`)
   - Standards source (`/agents/agent-making-agent/README.md`)
 - Optional:
+  - `tracking_mode` (`linear` default, `local` fallback)
+  - `tracking_contract_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md`)
+  - `linear_comment_schema_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md`)
+  - Shared Linear workflow file path (`/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - Shared worktree policy file path (`/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
   - Team capacity constraints
   - Sprint priorities/themes
   - Dependencies/risk constraints
   - Preferred batch size for parallel forks
+  - `review_required` (`false` default; when `true`, include `REVIEW_TASK` handoff)
+  - `pr_base_branch` (default: repository default branch)
   - Merge mode (`sequential` or `batch`, default `sequential`)
-  - Shared Linear workflow file path (`/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
-  - Shared worktree policy file path (`/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
-
-## Skills
-- Required Skills:
-  - None for baseline orchestration.
-- Potentially Required Skills:
-  - `linear`: when unit-of-work plans and progress must sync to project tracking.
-  - `spreadsheet`: when sprint planning matrices are generated/validated in tabular form.
-- If Missing, Install From:
-  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
-  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
-  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
-- Fallback Behavior If Skill Is Unavailable:
-  - Continue orchestration with markdown plans, branch logs, and local reports.
-  - Mark external tracking/table generation as optional follow-up.
-- Restart Note:
-  - After installing any missing skill, restart Codex before rerunning this agent.
-
-
-## MCP (If Needed)
-- Required MCP Servers:
-  - None for baseline orchestration.
-- Potentially Required MCP Servers:
-  - `linear`: when sprint tasks and status must be tracked in Linear.
-- If Missing, Setup From:
-  - `/mcp/servers/linear.md`
-  - `/mcp/templates/mcp-config.example.toml`
-- Fallback Behavior If MCP Is Unavailable:
-  - Continue with markdown plans and local tracking files.
-  - Return manual ticket-sync instructions.
-- Restart Note:
-  - After MCP setup/config changes, restart Codex before rerunning this agent.
 
 ## Shared Workflow Config
-- Use a single shared workflow file so all generated activations use the same Linear statuses:
+- Default tracking contract:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md`
+- Default Linear comment schema:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md`
+- Default Linear workflow statuses:
   - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
-- When present, orchestrator should include `linear_workflow_path` in every generated activation prompt for developer/tester agents.
-
-## Shared Worktree Policy
-- Use a single shared policy file so generated activations follow consistent worktree behavior:
+- Default worktree policy:
   - `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
-- When present, orchestrator should include `worktree_policy_path` in every generated activation prompt for developer/tester agents.
-
+- Generated worker packets must include all four paths, but worker behavior must still remain valid if shared files are not loaded.
 
 ## Outputs
 - Format:
   - `/reports/SPRINT_PLAN.md`:
-    - Sprint summary
-    - Work units with IDs
-    - Agent mapping per unit
-    - Dependency order
-    - Priority and risk tags
-    - Suggested execution waves
-  - `/reports/SPRINT_AGENT_ACTIVATIONS.md`:
-    - One filled activation prompt per work unit
-    - Required branch naming suggestion per unit (`codex/uow-###-<slug>`)
-    - Recommended fork label/thread identifier (`FORK-UOW-###`)
-    - Confirmation checklist before execution
-  - `/reports/SPRINT_EXECUTION_LOG.md`:
-    - One row per `UOW-ID` with mandatory fields:
-      - `UOW-ID`
-      - `FORK-ID`
-      - `branch`
-      - `owner`
-      - `status` (`PLANNED`, `IN_PROGRESS`, `READY_FOR_REVIEW`, `COMPLETE`, `MERGED`, `BLOCKED`)
-      - `substatus` (`codex_dev_done`, `codex_test_done`, `codex_review_ready`, or blank while in progress)
-      - `handoff_to_agent`
-      - `PR`
-      - `base_sha`
-      - `head_sha`
-      - `merge_status`
-      - `notes`
+    - sprint summary
+    - unit list with IDs
+    - agent mapping, dependencies, priorities, risks
+  - `/reports/SPRINT_ISSUE_PACKETS.md`:
+    - packet manifest by unit and issue
+    - latest `packet_version`
+    - generated `DEV_TASK` / `TEST_TASK` payloads and optional `REVIEW_TASK` payloads
+    - branch and handoff routing
   - `/reports/SPRINT_MERGE_PLAN.md`:
     - merge mode (`sequential` or `batch`)
-    - merge order or merge waves
-    - merge gate checklist per unit
-    - blocked items with reasons
+    - merge order/waves
+    - gate checklist per unit
   - `/reports/SPRINT_MERGE_RESULT.md`:
     - merged units
-    - skipped/blocked units
-    - conflicts encountered
-    - post-merge follow-up actions
-- Location:
-  - Repository-relative `/reports`
-- Success criteria:
-  - Plan is actionable, concise, and traceable by unit ID.
-  - Every work unit has one clear primary developer agent and deterministic tester/review handoff rules.
-  - Every work unit has branch + status tracking in execution log.
-  - Merge coordination output is available and deterministic.
+    - blocked/skipped units
+    - PR URLs/status for completed units
+    - follow-up actions
+  - Optional snapshot only: `/reports/SPRINT_EXECUTION_LOG.md`
+- Canonical state ownership:
+  - `tracking_mode=linear`: Linear status/comments are canonical.
+  - `tracking_mode=local`: `/reports/issues/<ISSUE-ID>/state.yaml` and `/reports/issues/<ISSUE-ID>/events.jsonl` are canonical.
 
 ## Workflow
-1. Parse sprint inputs and normalize tasks into candidate units.
-2. Resolve shared Linear workflow path (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`).
-3. Resolve shared worktree policy path (default: `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`).
-4. Scan `/agents/*/README.md` to understand available capabilities.
-5. Match each unit to the best-fit primary developer agent using explicit selection reasoning.
-6. Assign deterministic unit IDs (`UOW-001`, `UOW-002`, ...).
-7. Build handoff chains per unit:
-   - implementation -> testing -> review-ready
-   - direct implementation -> review-ready only for no-test-surface tasks
-8. Build dependency and execution-wave ordering.
-9. Produce draft `/reports/SPRINT_PLAN.md`.
-10. Show concise confirmation summary:
-   - total units
-   - mapped agents
-   - high-risk units
-   - unresolved ambiguities
-11. Wait for user confirmation before finalizing activations.
-12. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
-13. Require each activation prompt to include:
-    - feature-branch creation from default branch
-    - task-id commit message requirement
-    - task-list updates for `codex_dev_done` / `codex_test_done` / `codex_review_ready`
-    - `linear_workflow_path` pointing to shared workflow file for developer/tester agents
-    - `worktree_policy_path` pointing to shared policy file for developer/tester agents
-14. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
-15. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
-16. On status updates, refresh merge eligibility only when substatus reaches `codex_review_ready`.
-17. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
+1. Parse sprint inputs and normalize candidate work units.
+2. Resolve `tracking_mode`:
+   - explicit input wins
+   - else use tracking contract defaults
+   - else fallback: `linear` when issue IDs are available, otherwise `local`
+3. Resolve shared config paths for tracking contract, Linear comment schema, status workflow, and worktree policy.
+4. Scan `/agents/*/README.md` to determine capabilities.
+5. Assign deterministic `UOW-###` IDs and map best-fit primary developer agents.
+6. Build handoff chains per unit:
+   - default: implementation -> testing -> pr-ready
+   - optional: implementation -> testing -> review when `review_required=true`
+7. Build dependency and execution-wave ordering.
+8. Produce draft `/reports/SPRINT_PLAN.md`.
+9. Wait for user confirmation before final packet generation.
+10. Build role packets for each issue with required fields:
+   - `task_identifier`
+   - `tracking_mode`
+   - `packet_type`
+   - `packet_version`
+   - acceptance criteria or test scope
+   - branch suggestion
+   - handoff targets
+   - default packets: `DEV_TASK`, `TEST_TASK` (when test surface exists)
+   - optional packet: `REVIEW_TASK` only when explicitly requested
+11. For `tracking_mode=linear`:
+   - post packet comments in Linear using `AGENT_EVENT_V1` schema from `LINEAR_COMMENT_SCHEMA.md`
+   - keep packets on issue comments as worker source-of-truth
+12. For `tracking_mode=local`:
+   - write packet files under `/reports/issues/<ISSUE-ID>/`
+   - append packet publication events to `events.jsonl`
+13. Write `/reports/SPRINT_ISSUE_PACKETS.md` manifest.
+14. Build `/reports/SPRINT_MERGE_PLAN.md`.
+15. For each unit that reaches done gates, create a pull request from task branch to `pr_base_branch` (or repo default).
+16. Ensure each pull request includes:
+   - `task_identifier`
+   - linked issue/reference
+   - task description
+   - expected outcome / acceptance intent from the issue or packet
+   - no git diff summary or line-by-line change narration in PR body
+17. Update `/reports/SPRINT_MERGE_RESULT.md` with PR URL/status and merge progress.
+18. Optionally regenerate `/reports/SPRINT_EXECUTION_LOG.md` snapshot from canonical state.
 
 ## Constraints
-- Plan-only agent: do not execute implementation tasks.
-- Do not auto-fork threads; only provide explicit activation prompts.
-- Do not auto-merge branches without explicit user request.
-- Keep outputs concise; large details stay in report files, not chat flood.
-- Use `/agents/agent-making-agent/README.md` as canonical standards source.
-- Treat `AGENT_MAKING_INSTRUCTIONS.md` as human guidebook, not execution standard.
-- Prefer these implementation mappings when applicable:
-  - backend work -> `backend-developer`
-  - frontend work -> `frontend-developer`
-  - coupled backend+frontend work -> `fullstack-developer`
-- Prefer tester mappings:
-  - backend implementation handoff -> `backend-tester`
-  - frontend implementation handoff -> `frontend-tester`
-- Every unit must have:
-  - `UOW-ID`
-  - selected agent
-  - acceptance criteria
-  - dependency notes
-  - priority (`P0`-`P3`)
-- Must include an explicit warning that forked threads inherit context.
-- Must recommend starting subagent forks from a lightweight launcher thread.
-- Every subagent activation must instruct the subagent to update `/reports/SPRINT_EXECUTION_LOG.md` at:
-  - start (`IN_PROGRESS`)
-  - development completion (`codex_dev_done`)
-  - testing completion (`codex_test_done`) when testing is required
-  - review-ready (`codex_review_ready`)
-  - completion (`COMPLETE`)
-- Merge gate policy before marking unit merge-ready:
-  - task acceptance criteria met
-  - `codex_review_ready` set
-  - review status passed
-  - tests/checks passed (if applicable)
-  - branch up to date with `main`
+- Do not execute implementation/testing/review coding work.
+- Do not rely on copy/paste prompt activations as the primary mechanism.
+- Worker task instructions must be published as structured issue packets (`linear`) or per-issue files (`local`).
+- Shared sprint reports are orchestrator snapshots only.
+- Worker agents must not be instructed to mutate shared sprint reports.
+- Keep generated packets deterministic and versioned (`packet_version` increments on update).
+- Include inherited-context warning for worker threads and recommend lightweight launcher threads.
+- Do not auto-merge without explicit user request.
+- Do not publish `REVIEW_TASK` by default; require explicit request or `review_required=true`.
+- Do not create PRs without task description and expected outcome when available in issue/task context.
+- Do not generate git diff summaries in PR descriptions; reviewer handles diff analysis/comparison.
 
 ## Validation
-- Required files for this agent package exist:
+- Required files for this package exist:
   - `README.md`
   - `USAGE_TEMPLATE.md`
   - `EXAMPLES.md`
-- Required sprint report files exist after run:
+- Required outputs exist after run:
   - `/reports/SPRINT_PLAN.md`
-  - `/reports/SPRINT_AGENT_ACTIVATIONS.md`
-  - `/reports/SPRINT_EXECUTION_LOG.md`
+  - `/reports/SPRINT_ISSUE_PACKETS.md`
   - `/reports/SPRINT_MERGE_PLAN.md`
   - `/reports/SPRINT_MERGE_RESULT.md`
-- `SPRINT_PLAN.md` checks:
-  - Every unit has a unique `UOW-ID`.
-  - Every unit has one mapped primary agent.
-  - Every unit has defined tester/review handoff path.
-  - Priority and dependencies are present per unit.
-- `SPRINT_AGENT_ACTIVATIONS.md` checks:
-  - One filled activation prompt per `UOW-ID`.
-  - Prompt includes objective, inputs, constraints, and output format.
-  - Each prompt includes `FORK-UOW-###` and branch suggestion.
-  - Developer/tester prompts include `linear_workflow_path` for shared status configuration.
-  - Developer/tester prompts include `worktree_policy_path` for shared no-auto-worktree behavior.
-  - Includes warning about inherited context and lightweight-fork recommendation.
-- `SPRINT_EXECUTION_LOG.md` checks:
-  - One row per `UOW-ID` with all mandatory tracking fields.
-  - Branch, status, substatus, and handoff target values are present for all units.
-- `SPRINT_MERGE_PLAN.md` checks:
-  - Includes selected merge mode.
-  - Includes merge order/waves and gate checklist per unit.
-- `SPRINT_MERGE_RESULT.md` checks:
-  - Includes merged/skipped/blocked breakdown with reasons.
+- Plan checks:
+  - every unit has unique `UOW-ID`
+  - every unit has one mapped primary developer agent
+  - tester handoff path is defined per unit
+  - review handoff path exists only when explicitly requested
+- Packet checks:
+  - every unit has a `DEV_TASK` packet
+  - testable units have a `TEST_TASK` packet
+  - `REVIEW_TASK` packet exists only when explicitly requested
+  - packets include `tracking_mode`, `packet_version`, branch, and handoff fields
+  - `tracking_mode=linear`: packets follow `AGENT_EVENT_V1` schema in Linear comments
+  - `tracking_mode=local`: packet files and per-issue state/event files exist
+- PR checks:
+  - done units have pull requests opened
+  - each pull request includes task description and expected outcome when available
+  - pull request body does not include git diff summary/changelog-style code narration
+- Merge plan checks:
+  - selected merge mode is explicit
+  - each unit has gate checklist and merge wave/order
 
 ## Failure Handling
 - Missing/invalid sprint input:
-  - Signal: cannot parse units
-  - Action: stop and request structured input format
+  - Signal: cannot parse work units
+  - Action: stop and request structured input
 - No suitable agent match:
-  - Signal: unit cannot map to any agent capability
-  - Action: mark as `UNMAPPED`, explain gap, propose fallback options
+  - Signal: unit cannot map to available agent capability
+  - Action: mark `UNMAPPED`, explain gap, propose fallback
 - Ambiguous mapping:
   - Signal: multiple agents equally suitable
-  - Action: list top two options and required tie-break criterion
-- Report overflow risk:
-  - Signal: too many units for readable output
-  - Action: group by execution waves and keep chat summary short; write full detail to files
-- Confirmation not received:
-  - Signal: user has not approved draft plan
-  - Action: do not finalize activation templates
-- Missing execution log updates:
-  - Signal: unit status/substatus stale or branch field empty
-  - Action: mark unit `BLOCKED` for merge and include remediation steps
-- Invalid handoff sequence:
-  - Signal: unit marked review-ready without required test phase
-  - Action: block merge and require status correction with evidence
-- Merge gate failure:
-  - Signal: incomplete checks, outdated branch, or failed review/tests
-  - Action: keep unit out of merge set and report reason in merge plan/result
+  - Action: show top options and required tie-break
+- Linear tracking unavailable in `tracking_mode=linear`:
+  - Signal: issue updates/comments cannot be read or posted
+  - Action: stop and ask user to switch to `tracking_mode=local` or restore Linear access
+- Missing per-issue local state in `tracking_mode=local`:
+  - Signal: cannot read/write `/reports/issues/<ISSUE-ID>/` state files
+  - Action: create missing structure, then continue
+- Packet schema invalid:
+  - Signal: missing required fields in generated packet
+  - Action: regenerate packet, increment `packet_version`, and overwrite latest packet comment/file
+- Pull request creation blocked:
+  - Signal: missing permissions, missing branch, or provider error
+  - Action: keep unit in blocked state, record exact blocker, and output manual PR fallback steps
+- Pull request context incomplete:
+  - Signal: task description or expected outcome unavailable
+  - Action: attempt to resolve from issue/task packet; if still missing, stop PR creation for that unit and request clarification
+- Pull request body includes diff summary:
+  - Signal: PR description contains git diff summary or code-change narration
+  - Action: rewrite PR description to intent-only context (task description + expected outcome + issue reference)
 
 ## Definition of Done
-- Draft and finalized sprint plan files are generated.
-- All planned units have stable `UOW-ID`s and mapped agents.
-- Activation prompts are ready to copy and use per unit.
-- Reports include fork/thread identifiers, branch suggestions, and execution log entries with substatus handoff tracking.
-- Merge plan and merge result reports are generated with deterministic ordering.
-- Context-inheritance warning and lightweight-fork guidance are explicit.
+- Sprint plan and merge plan/result files are generated.
+- Every unit has deterministic role packets with explicit handoff fields.
+- Canonical tracking mode is explicit for each unit.
+- Completed units have pull requests created with task description and expected outcome when available.
+- Worker instructions are consumable from issue comments (`linear`) or per-issue files (`local`) without copy/paste prompt fan-out.
+- Shared sprint reports remain snapshot outputs owned by orchestrator.
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.
 Scenario examples live in `EXAMPLES.md` in this folder.
@@ -283,6 +225,6 @@ Scenario examples live in `EXAMPLES.md` in this folder.
 - Total: 16/16
 - Result: PASS
 - Top improvements:
-  1. Add optional Jira API adapter guidance.
-  2. Add optional team-capacity balancing heuristics.
-  3. Add optional SLA-aware scheduling fields.
+  1. Add optional auto-reconciliation check between Linear and local tracking snapshots.
+  2. Add packet schema lint command for pre-publish validation.
+  3. Add optional review workload balancing heuristics.
