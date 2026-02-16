@@ -18,6 +18,7 @@ Inputs: extra_test_focus: contract
 Inputs: task_list_path: /workspace/inventory-service/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: INV-118
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Inputs: branch_name: codex/inv-118-reservation-fixes
 Inputs: commit_mode: commit
 Constraints:

@@ -1,5 +1,5 @@
 # Fullstack Developer
-Last Updated: 2026-02-16 12:10 CET
+Last Updated: 2026-02-16 12:20 CET
 
 ## Mission
 Implement connected backend and frontend task changes directly with stack-aware decisions, strict task-branch hygiene, and deterministic tester/review handoff.
@@ -34,6 +34,7 @@ Implement connected backend and frontend task changes directly with stack-aware 
   - `task_list_path`
   - `linear_issue_id`
   - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `worktree_policy_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
   - `linear_ready_for_test_status` (optional override; defaults to workflow `agent_work_done_status`)
   - `branch_name` override
   - `tester_strategy` (`auto`, `backend-only`, `frontend-only`, `both`)
@@ -46,6 +47,14 @@ Implement connected backend and frontend task changes directly with stack-aware 
   1. explicit input values (for example `linear_ready_for_test_status`)
   2. values from `linear_workflow_path`
   3. built-in fallback defaults in this agent
+
+## Shared Worktree Policy
+- Default worktree policy is read from:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
+- Required behavior:
+  - do not create a new worktree without explicit user permission
+  - if branch-switch is blocked by local tracked changes and safe commit resolves it, create a clear checkpoint commit and continue
+  - if safe commit is not clear, stop and ask user
 
 ## Skills
 - Required Skills:
@@ -110,22 +119,27 @@ Implement connected backend and frontend task changes directly with stack-aware 
 ## Workflow
 1. Validate required task inputs and acceptance criteria.
 2. Resolve Linear workflow config from `linear_workflow_path` when provided/readable.
-3. Resolve stack context from `stack_file_path` or repository discovery.
-4. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
-5. If stack/tooling ambiguity materially changes approach, present recommendation and request choice before edits.
-6. Create/switch task branch from `default_branch`.
-7. If `linear_issue_id` is provided, set issue status to workflow `agent_working_status` (or equivalent active-dev state).
-8. Implement backend and frontend changes in coordinated increments.
-9. Run layer-specific checks for all touched components.
-10. Update task list to `codex_dev_done` when task list exists.
-11. Determine tester handoff:
+3. Resolve worktree policy from `worktree_policy_path` when provided/readable.
+4. Resolve stack context from `stack_file_path` or repository discovery.
+5. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
+6. If stack/tooling ambiguity materially changes approach, present recommendation and request choice before edits.
+7. Create/switch task branch from `default_branch`.
+8. If branch switch is blocked by local tracked changes:
+   - commit safely with clear checkpoint message when it resolves the blocker
+   - otherwise stop and ask user
+   - do not create new worktree without explicit user permission
+9. If `linear_issue_id` is provided, set issue status to workflow `agent_working_status` (or equivalent active-dev state).
+10. Implement backend and frontend changes in coordinated increments.
+11. Run layer-specific checks for all touched components.
+12. Update task list to `codex_dev_done` when task list exists.
+13. Determine tester handoff:
    - backend changes present -> handoff to `backend-tester`
    - frontend behavior changes present -> handoff to `frontend-tester`
    - both present -> handoff to both
    - no meaningful test surface -> move directly to `codex_review_ready`
-12. Commit grouped task-only changes with task identifier in commit message.
-13. Push task branch to remote.
-14. Update Linear issue status/comment when provided:
+14. Commit grouped task-only changes with task identifier in commit message.
+15. Push task branch to remote.
+16. Update Linear issue status/comment when provided:
    - set status to `linear_ready_for_test_status` (or workflow `agent_work_done_status`)
    - include tester target(s), branch name, and head commit in handoff comment
 
@@ -136,6 +150,7 @@ Implement connected backend and frontend task changes directly with stack-aware 
 - Do not skip required task list or Linear updates.
 - Do not update Linear as ready for test until task branch is pushed and available to testers.
 - Do not leave Linear issue in an active development state after successful implementation handoff.
+- Do not create new worktree without explicit user permission.
 - Do not use destructive git commands.
 - No force push without explicit user permission.
 - When adding unfamiliar libraries/APIs, consult Context7 first when available instead of guessing usage.
@@ -170,6 +185,9 @@ Implement connected backend and frontend task changes directly with stack-aware 
 - Task tracker or Linear update blocked:
   - Signal: file/API unavailable
   - Action: report blocked update with manual remediation steps
+- Branch switch blocked by local tracked changes:
+  - Signal: checkout/switch blocked by uncommitted tracked files
+  - Action: if safe checkpoint commit resolves, commit and continue; otherwise stop and ask user; do not create new worktree without permission
 - Branch push blocked:
   - Signal: push rejected or remote unavailable
   - Action: report blocker and do not mark Linear as ready for test

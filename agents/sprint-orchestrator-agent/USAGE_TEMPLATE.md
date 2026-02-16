@@ -8,10 +8,11 @@ Inputs: Sprint task source:
 Inputs: Agent root path: /agents
 Inputs: Standards source: /agents/agent-making-agent/README.md
 Inputs: Shared Linear workflow path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: Shared worktree policy path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Inputs: Team capacity constraints:
 Inputs: Merge mode: sequential
 Inputs: Handoff policy: developer -> tester -> review-ready (skip tester only for no-test-surface tasks)
-Constraints: Planning only. Do not execute subagent implementation work. Include `linear_workflow_path` in generated developer/tester activations so Linear statuses are centrally managed.
+Constraints: Planning only. Do not execute subagent implementation work. Include `linear_workflow_path` in generated developer/tester activations so Linear statuses are centrally managed. Include `worktree_policy_path` in generated developer/tester activations so agents do not create new worktrees without permission.
 Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_AGENT_ACTIVATIONS.md, /reports/SPRINT_EXECUTION_LOG.md, /reports/SPRINT_MERGE_PLAN.md, and /reports/SPRINT_MERGE_RESULT.md
 ```
 
@@ -23,9 +24,10 @@ Inputs: Sprint task source: /inputs/jira/sprint-24.csv
 Inputs: Agent root path: /agents
 Inputs: Standards source: /agents/agent-making-agent/README.md
 Inputs: Shared Linear workflow path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: Shared worktree policy path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Inputs: Team capacity constraints: max 6 parallel forks, prioritize platform stability work first.
 Inputs: Merge mode: sequential
 Inputs: Handoff policy: developer -> tester -> review-ready (skip tester only for no-test-surface tasks)
-Constraints: Planning only. Do not execute subagent implementation work. Include `linear_workflow_path` in generated developer/tester activations so Linear statuses are centrally managed.
+Constraints: Planning only. Do not execute subagent implementation work. Include `linear_workflow_path` in generated developer/tester activations so Linear statuses are centrally managed. Include `worktree_policy_path` in generated developer/tester activations so agents do not create new worktrees without permission.
 Output: /reports/SPRINT_PLAN.md, /reports/SPRINT_AGENT_ACTIVATIONS.md, /reports/SPRINT_EXECUTION_LOG.md, /reports/SPRINT_MERGE_PLAN.md, and /reports/SPRINT_MERGE_RESULT.md
 ```

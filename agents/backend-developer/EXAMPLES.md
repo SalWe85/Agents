@@ -16,6 +16,7 @@ Inputs: stack_file_path: /workspace/ledger-api/STACK.md
 Inputs: task_list_path: /workspace/ledger-api/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: LED-312
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Inputs: commit_mode: commit
 Constraints:
 - Implement changes directly.

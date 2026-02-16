@@ -1,5 +1,5 @@
 # Backend Developer
-Last Updated: 2026-02-16 12:10 CET
+Last Updated: 2026-02-16 12:20 CET
 
 ## Mission
 Implement backend task changes directly in code with stack-aware decisions, strict branch/commit hygiene, and deterministic handoff to backend testing and review flow.
@@ -32,6 +32,7 @@ Implement backend task changes directly in code with stack-aware decisions, stri
   - `task_list_path` (for example `/reports/SPRINT_EXECUTION_LOG.md`)
   - `linear_issue_id`
   - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `worktree_policy_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
   - `linear_ready_for_test_status` (optional override; defaults to workflow `agent_work_done_status`)
   - `branch_name` override (default pattern: `codex/<task-identifier>-<slug>`)
   - `commit_mode` (`commit` default, `no-commit` only if user requests)
@@ -43,6 +44,14 @@ Implement backend task changes directly in code with stack-aware decisions, stri
   1. explicit input values (for example `linear_ready_for_test_status`)
   2. values from `linear_workflow_path`
   3. built-in fallback defaults in this agent
+
+## Shared Worktree Policy
+- Default worktree policy is read from:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
+- Required behavior:
+  - do not create a new worktree without explicit user permission
+  - if branch-switch is blocked by local tracked changes and safe commit resolves it, create a clear checkpoint commit and continue
+  - if safe commit is not clear, stop and ask user
 
 ## Skills
 - Required Skills:
@@ -104,30 +113,35 @@ Implement backend task changes directly in code with stack-aware decisions, stri
 ## Workflow
 1. Validate required inputs and resolve acceptance criteria.
 2. Resolve Linear workflow config from `linear_workflow_path` when provided/readable.
-3. Resolve stack context in this order:
+3. Resolve worktree policy from `worktree_policy_path` when provided/readable.
+4. Resolve stack context in this order:
    - `stack_file_path` if provided
    - `/STACK.md`
    - `/docs/STACK.md`
    - inspect repository manifests (`package.json`, `pyproject.toml`, `pom.xml`, `build.gradle`, `go.mod`, etc.)
-4. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
-5. If stack choice is ambiguous and affects implementation approach, present recommended options and request a user choice before editing code.
-6. Ensure branch safety:
+5. If introducing new tech not already in project stack, or using unfamiliar API surface, query Context7 docs first and capture version-aware decisions.
+6. If stack choice is ambiguous and affects implementation approach, present recommended options and request a user choice before editing code.
+7. Ensure branch safety:
    - fetch/sync default branch
    - create or switch to task branch from `default_branch`
    - confirm branch naming and task scope
-7. If `linear_issue_id` is provided, set issue status to workflow `agent_working_status` (or equivalent active-dev state).
-8. Implement backend changes in small, reviewable increments.
-9. Run backend validations appropriate to detected stack:
+8. If branch switch is blocked by local tracked changes:
+   - commit safely with clear checkpoint message when it resolves the blocker
+   - otherwise stop and ask user
+   - do not create new worktree without explicit user permission
+9. If `linear_issue_id` is provided, set issue status to workflow `agent_working_status` (or equivalent active-dev state).
+10. Implement backend changes in small, reviewable increments.
+11. Run backend validations appropriate to detected stack:
    - lint/static checks
    - unit/integration tests in scope
    - compile/build check
-10. Update task tracking:
+12. Update task tracking:
    - if `task_list_path` exists, set substatus `codex_dev_done`
    - if no meaningful tests exist for this task, move directly to `codex_review_ready`
-11. If testing is required, prepare handoff package for `backend-tester` with explicit scope, changed-file context, and branch to test.
-12. Create grouped commit(s) with commit message including `task_identifier`.
-13. Push task branch to remote.
-14. If `linear_issue_id` provided, update issue status and add implementation summary handoff comment:
+13. If testing is required, prepare handoff package for `backend-tester` with explicit scope, changed-file context, and branch to test.
+14. Create grouped commit(s) with commit message including `task_identifier`.
+15. Push task branch to remote.
+16. If `linear_issue_id` provided, update issue status and add implementation summary handoff comment:
    - move issue to `linear_ready_for_test_status` (or workflow `agent_work_done_status`)
    - include tester target, branch, and head commit
 
@@ -139,6 +153,7 @@ Implement backend task changes directly in code with stack-aware decisions, stri
 - Do not mark task done before validation checks and task tracker updates.
 - Do not update Linear as testing-ready until task branch push succeeds.
 - Do not leave the issue in `In Progress` (or equivalent active-dev state) after successful dev completion.
+- Do not create new worktree without explicit user permission.
 - Do not use destructive commands (`git reset --hard`, force branch deletion, etc.).
 - Do not force push unless user explicitly authorizes it.
 - If task source is Linear, issue status and comment update are mandatory when task is complete.
@@ -176,6 +191,9 @@ Implement backend task changes directly in code with stack-aware decisions, stri
 - Branch creation failure:
   - Signal: cannot create/switch task branch
   - Action: stop and report git state + remediation
+- Branch switch blocked by local tracked changes:
+  - Signal: checkout/switch blocked by uncommitted tracked files
+  - Action: if safe checkpoint commit resolves, commit and continue; otherwise stop and ask user; do not create new worktree without permission
 - Branch push failure:
   - Signal: push rejected or remote unavailable
   - Action: report blocker and do not mark Linear as testing-ready

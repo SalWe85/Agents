@@ -77,6 +77,21 @@ Agents that synchronize Linear state should receive:
 
 Update that single file when your Linear status names change (for example `Agent work DONE`, `Agent testing`, `Agent test DONE`), then rerun agents without editing each agent definition.
 
+## Shared Worktree Policy
+
+If you run agents in parallel worktrees, keep worktree behavior in one place:
+
+- `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
+
+Agents should receive:
+
+- `Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
+
+Default behavior:
+- Never create a new worktree without explicit user permission.
+- If branch switch is blocked and a safe checkpoint commit resolves it, commit with a clear message and continue.
+- If safe commit is unclear, stop and ask the user how to proceed.
+
 ## Recommended Naming Conventions
 
 - Agent folders: lowercase-kebab-case (example: `bug-finder-agent`)

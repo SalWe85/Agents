@@ -1,5 +1,5 @@
 # Backend Tester
-Last Updated: 2026-02-16 12:10 CET
+Last Updated: 2026-02-16 12:20 CET
 
 ## Mission
 Verify backend changes with configurable depth, add missing backend tests when needed, and produce evidence-backed pass/fail output with deterministic readiness gating and task-status handoff.
@@ -32,6 +32,7 @@ Verify backend changes with configurable depth, add missing backend tests when n
   - `task_list_path`
   - `linear_issue_id`
   - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `worktree_policy_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
   - `linear_ready_statuses` (optional override; defaults to workflow-derived readiness set)
   - `post_not_ready_comment` (`true` default)
   - `branch_name` (if tests need to be added)
@@ -48,6 +49,14 @@ Verify backend changes with configurable depth, add missing backend tests when n
   1. explicit input values (for example `linear_ready_statuses`)
   2. values from `linear_workflow_path`
   3. built-in fallback defaults in this agent
+
+## Shared Worktree Policy
+- Default worktree policy is read from:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
+- Required behavior:
+  - do not create a new worktree without explicit user permission
+  - if branch-switch is blocked by local tracked changes and safe commit resolves it, create a clear checkpoint commit and continue
+  - if safe commit is not clear, stop and ask user
 
 ## Skills
 - Required Skills:
@@ -111,7 +120,8 @@ Verify backend changes with configurable depth, add missing backend tests when n
 ## Workflow
 1. Validate required inputs and load changed-scope context.
 2. Resolve Linear workflow config from `linear_workflow_path` when provided/readable.
-3. If `linear_issue_id` is provided, execute readiness gate before any test command:
+3. Resolve worktree policy from `worktree_policy_path` when provided/readable.
+4. If `linear_issue_id` is provided, execute readiness gate before any test command:
    - read current issue status and recent comments first
    - require both:
      - issue status in `linear_ready_statuses` (or closest team equivalent)
@@ -119,25 +129,29 @@ Verify backend changes with configurable depth, add missing backend tests when n
    - if not ready, post one concise not-ready comment (when `post_not_ready_comment=true`) and stop without executing tests
    - ignore older tester-authored blocked comments once a newer developer handoff + ready status exists
    - use branch from latest valid developer handoff comment as test branch; use `branch_name` only as fallback
-4. Resolve stack/test tooling from stack file or repo inspection.
-5. Determine test depth by `harness_mode`:
+5. Resolve stack/test tooling from stack file or repo inspection.
+6. Determine test depth by `harness_mode`:
    - `targeted`: focused tests for specified modules/endpoints
    - `full`: broad backend suite
    - `developer_handoff`: run fullest feasible suite for changed backend area (default when invoked after developer completion)
-6. If test files must be added/updated, create/switch to task branch from `default_branch` (or continue provided branch) and implement tests.
-7. If `linear_issue_id` is provided and readiness gate passed, set issue status to workflow `agent_testing_status`.
-8. Run backend validation commands:
+7. If test files must be added/updated, create/switch to task branch from `default_branch` (or continue provided branch) and implement tests.
+8. If branch switch is blocked by local tracked changes:
+   - commit safely with clear checkpoint message when it resolves the blocker
+   - otherwise stop and ask user
+   - do not create new worktree without explicit user permission
+9. If `linear_issue_id` is provided and readiness gate passed, set issue status to workflow `agent_testing_status`.
+10. Run backend validation commands:
    - lint/static checks
    - unit/integration tests
    - compile/build checks
    - optional extra focus checks when requested
-9. Write `/reports/BACKEND_TEST_REPORT.md`.
-10. Update task list statuses when present:
+11. Write `/reports/BACKEND_TEST_REPORT.md`.
+12. Update task list statuses when present:
    - passing: `codex_test_done`, then `codex_review_ready`
    - failing/blocking: keep out of review-ready and mark blocked
-11. Update Linear issue with test outcome summary when provided:
+13. Update Linear issue with test outcome summary when provided:
    - passing: move issue to workflow `agent_test_done_status`
-12. If tests were added/updated and `commit_mode=commit`, create task-scoped commit message including `task_identifier`.
+14. If tests were added/updated and `commit_mode=commit`, create task-scoped commit message including `task_identifier`.
 
 ## Constraints
 - If invoked from developer handoff, prefer maximum practical test coverage for changed backend scope.
@@ -149,6 +163,7 @@ Verify backend changes with configurable depth, add missing backend tests when n
 - Do not use destructive git operations.
 - No force push without explicit permission.
 - A tester-authored blocked comment must never block execution when a newer developer handoff and ready status are present.
+- Do not create new worktree without explicit user permission.
 
 ## Validation
 - Input and scope contract is complete.
@@ -174,6 +189,9 @@ Verify backend changes with configurable depth, add missing backend tests when n
 - Task not ready for test:
   - Signal: issue status not in ready set or no valid developer handoff comment with branch
   - Action: stop immediately, post concise not-ready note (optional), and wait for rerun after developer handoff
+- Branch switch blocked by local tracked changes:
+  - Signal: checkout/switch blocked by uncommitted tracked files
+  - Action: if safe checkpoint commit resolves, commit and continue; otherwise stop and ask user; do not create new worktree without permission
 - No runnable test commands:
   - Signal: project lacks executable test tooling in current environment
   - Action: report blocker, add minimal feasible checks, and mark `NEEDS_MANUAL_VERIFICATION`

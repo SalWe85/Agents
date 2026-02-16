@@ -1,5 +1,5 @@
 # Sprint Orchestrator Agent
-Last Updated: 2026-02-16 12:10 CET
+Last Updated: 2026-02-16 12:20 CET
 
 ## Mission
 Plan and orchestrate sprint-scale work by mapping task units to existing agents, generating ready-to-run activation prompts, enforcing developer -> tester -> review handoff rules, tracking execution branches/status, and coordinating merge flow.
@@ -47,6 +47,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Preferred batch size for parallel forks
   - Merge mode (`sequential` or `batch`, default `sequential`)
   - Shared Linear workflow file path (`/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - Shared worktree policy file path (`/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
 
 ## Skills
 - Required Skills:
@@ -83,6 +84,11 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 - Use a single shared workflow file so all generated activations use the same Linear statuses:
   - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
 - When present, orchestrator should include `linear_workflow_path` in every generated activation prompt for developer/tester agents.
+
+## Shared Worktree Policy
+- Use a single shared policy file so generated activations follow consistent worktree behavior:
+  - `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
+- When present, orchestrator should include `worktree_policy_path` in every generated activation prompt for developer/tester agents.
 
 
 ## Outputs
@@ -134,30 +140,32 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
 ## Workflow
 1. Parse sprint inputs and normalize tasks into candidate units.
 2. Resolve shared Linear workflow path (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`).
-3. Scan `/agents/*/README.md` to understand available capabilities.
-4. Match each unit to the best-fit primary developer agent using explicit selection reasoning.
-5. Assign deterministic unit IDs (`UOW-001`, `UOW-002`, ...).
-6. Build handoff chains per unit:
+3. Resolve shared worktree policy path (default: `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`).
+4. Scan `/agents/*/README.md` to understand available capabilities.
+5. Match each unit to the best-fit primary developer agent using explicit selection reasoning.
+6. Assign deterministic unit IDs (`UOW-001`, `UOW-002`, ...).
+7. Build handoff chains per unit:
    - implementation -> testing -> review-ready
    - direct implementation -> review-ready only for no-test-surface tasks
-7. Build dependency and execution-wave ordering.
-8. Produce draft `/reports/SPRINT_PLAN.md`.
-9. Show concise confirmation summary:
+8. Build dependency and execution-wave ordering.
+9. Produce draft `/reports/SPRINT_PLAN.md`.
+10. Show concise confirmation summary:
    - total units
    - mapped agents
    - high-risk units
    - unresolved ambiguities
-10. Wait for user confirmation before finalizing activations.
-11. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
-12. Require each activation prompt to include:
+11. Wait for user confirmation before finalizing activations.
+12. Generate `/reports/SPRINT_AGENT_ACTIVATIONS.md` with filled prompts per unit.
+13. Require each activation prompt to include:
     - feature-branch creation from default branch
     - task-id commit message requirement
     - task-list updates for `codex_dev_done` / `codex_test_done` / `codex_review_ready`
     - `linear_workflow_path` pointing to shared workflow file for developer/tester agents
-13. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
-14. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
-15. On status updates, refresh merge eligibility only when substatus reaches `codex_review_ready`.
-16. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
+    - `worktree_policy_path` pointing to shared policy file for developer/tester agents
+14. Generate `/reports/SPRINT_EXECUTION_LOG.md` initialized with all units and `PLANNED` status.
+15. Build `/reports/SPRINT_MERGE_PLAN.md` with merge mode, gate checks, and merge order/waves.
+16. On status updates, refresh merge eligibility only when substatus reaches `codex_review_ready`.
+17. Generate `/reports/SPRINT_MERGE_RESULT.md` as merge progress/result tracker.
 
 ## Constraints
 - Plan-only agent: do not execute implementation tasks.
@@ -215,6 +223,7 @@ Plan and orchestrate sprint-scale work by mapping task units to existing agents,
   - Prompt includes objective, inputs, constraints, and output format.
   - Each prompt includes `FORK-UOW-###` and branch suggestion.
   - Developer/tester prompts include `linear_workflow_path` for shared status configuration.
+  - Developer/tester prompts include `worktree_policy_path` for shared no-auto-worktree behavior.
   - Includes warning about inherited context and lightweight-fork recommendation.
 - `SPRINT_EXECUTION_LOG.md` checks:
   - One row per `UOW-ID` with all mandatory tracking fields.

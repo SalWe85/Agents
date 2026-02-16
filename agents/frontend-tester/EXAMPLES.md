@@ -13,6 +13,7 @@ Inputs: Key user flows to validate: sign in, add to cart, checkout confirmation.
 Inputs: Credentials or test account details: use qa_checkout_user from team vault.
 Inputs: linear_issue_id: SHOP-301
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Constraints: Use Playwright skill and playwright-cli first. If missing, install both first. Use Chrome DevTools MCP only when deeper diagnostics are needed. No source code changes.
 Output: /reports/FRONTEND_TEST_REPORT.md
 ```
@@ -36,6 +37,7 @@ Inputs: Key user flows to validate: login, dashboard load, profile update, log o
 Inputs: Credentials or test account details: use qa_release_candidate account.
 Inputs: linear_issue_id: APP-52
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Constraints: Use Playwright skill and playwright-cli first. If missing, install both first. Use Chrome DevTools MCP when failures need console/network evidence. No source code changes.
 Output: /reports/FRONTEND_TEST_REPORT.md
 ```
@@ -59,6 +61,7 @@ Inputs: Key user flows to validate: cart update, checkout submit, payment redire
 Inputs: Credentials or test account details: use qa_checkout_user from team vault.
 Inputs: linear_issue_id: SHOP-342
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Constraints: Use Playwright skill and playwright-cli first. If flow fails or is flaky, use Chrome DevTools MCP to capture console and network diagnostics. No source code changes.
 Output: /reports/FRONTEND_TEST_REPORT.md
 ```

@@ -16,6 +16,7 @@ Inputs: stack_file_path: /workspace/support-portal/STACK.md
 Inputs: task_list_path: /workspace/support-portal/reports/SPRINT_EXECUTION_LOG.md
 Inputs: linear_issue_id: UI-204
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
 Inputs: commit_mode: commit
 Constraints:
 - Implement changes directly.
