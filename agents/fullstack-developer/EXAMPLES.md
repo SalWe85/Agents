@@ -1,72 +1,67 @@
 # Examples
 
-Use these as starting points. Review and adapt stack assumptions, test strategy, and task tracker paths for your project.
+Use these as starting points. Adapt stack assumptions, tester strategy, and handoff policy to your project.
 
-## Example 1: Coupled Server + UI Change (Thymeleaf-Style)
+## Example 1: Linear Mode Fullstack Handoff to Both Testers
 
 ### Input
 ```text
 Agent: fullstack-developer
-Goal: Add invoice approval flow with role checks, backend state transitions, and server-rendered confirmation views.
+Goal: Add invoice approval flow with backend role checks and server-rendered confirmation states.
 Inputs: task_identifier: BILL-55
 Inputs: repo_root: /workspace/billing-app
 Inputs: default_branch: main
-Inputs: acceptance_criteria: Only approvers can approve, state transitions are auditable, and UI confirmation reflects final state.
+Inputs: acceptance_criteria: Only approvers can approve; transitions are auditable; UI reflects final state.
 Inputs: stack_file_path: /workspace/billing-app/STACK.md
-Inputs: task_list_path: /workspace/billing-app/reports/SPRINT_EXECUTION_LOG.md
+Inputs: tracking_mode: linear
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
 Inputs: linear_issue_id: BILL-55
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
+Inputs: packet_type: DEV_TASK
 Inputs: tester_strategy: both
+Inputs: branch_name: codex/bill-55-approval-flow
 Inputs: commit_mode: commit
-Constraints:
-- Implement fullstack changes directly.
-- Run checks for changed layers.
-- Keep commits scoped to BILL-55.
-Output:
-- Code changes + status updates + validation summary.
+Constraints: Consume latest DEV_TASK packet. Run backend + frontend checks. Push branch before structured handoff.
+Output: Fullstack changes, structured handoff to backend-tester + frontend-tester, check summary.
 ```
 
 ### Expected Output
 ```text
-Creates/switches task branch from main and implements backend + server-rendered UI updates.
-Runs backend and frontend relevant checks.
-Commits and pushes the task branch before ticket handoff.
-Updates task list to codex_dev_done.
-Moves Linear ticket into testing-ready state and hands off to backend-tester and frontend-tester with branch + commit details.
-After testing completion, marks codex_review_ready.
-Commits task-scoped changes with BILL-55 in commit messages.
+Reads latest DEV_TASK packet from issue comments.
+Implements backend/frontend changes and runs layer-specific validations.
+Pushes branch and posts structured handoff event listing both tester targets.
+Moves issue to testing-ready status.
 ```
 
-## Example 2: Backend-Heavy Task with Minimal UI Impact
+## Example 2: Local Mode Fullstack Handoff
 
 ### Input
 ```text
 Agent: fullstack-developer
-Goal: Introduce new pricing rule engine and expose results in existing dashboard widget.
+Goal: Introduce pricing rule engine and expose computed total in existing dashboard widget.
 Inputs: task_identifier: PRC-90
 Inputs: repo_root: /workspace/pricing-suite
 Inputs: default_branch: develop
-Inputs: acceptance_criteria: Rule engine computes expected totals; dashboard widget displays new total without layout regressions.
-Inputs: stack_file_path:
-Inputs: task_list_path: /workspace/pricing-suite/reports/SPRINT_EXECUTION_LOG.md
+Inputs: acceptance_criteria: Rule engine computes expected totals and widget displays totals without layout regression.
+Inputs: tracking_mode: local
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: packet_type: DEV_TASK
+Inputs: local_issue_dir: /workspace/pricing-suite/reports/issues/PRC-90/
+Inputs: local_state_path: /workspace/pricing-suite/reports/issues/PRC-90/state.yaml
+Inputs: local_events_path: /workspace/pricing-suite/reports/issues/PRC-90/events.jsonl
 Inputs: tester_strategy: auto
+Inputs: branch_name: codex/prc-90-pricing-engine
 Inputs: commit_mode: commit
-Constraints:
-- Ask for choice if stack ambiguity affects implementation.
-- Run relevant checks for touched layers.
-Output:
-- Code changes + status updates + validation summary.
+Constraints: Consume local DEV_TASK packet and write only local state/events.
+Output: Fullstack changes, local structured handoff event, check summary.
 ```
 
 ### Expected Output
 ```text
-Inspects stack due to missing stack file; if ambiguity exists, proposes preferred route and asks user before edits.
-Implements backend-heavy changes and limited UI update on a task branch from develop.
-Runs full backend checks and scoped frontend checks.
-Updates task list to codex_dev_done and hands off at least to backend-tester.
-Commits and pushes the task branch before Linear handoff.
-Moves Linear ticket to testing-ready state and includes exact branch in tester handoff comment.
-Moves to codex_review_ready after required tester outputs are complete.
-Commits PRC-90 scoped changes with PRC-90 in commit messages.
+Reads local DEV_TASK packet under /reports/issues/PRC-90/.
+Implements backend-heavy changes with scoped UI update and runs relevant checks.
+Pushes branch, updates local state.yaml, and appends completion event with tester target(s).
 ```

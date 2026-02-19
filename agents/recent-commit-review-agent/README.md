@@ -1,233 +1,138 @@
 # Recent Commit Review Agent
-Last Updated: 2026-02-15 19:18 CET
+Last Updated: 2026-02-16 13:55 CET
 
 ## Mission
-Review only recent commits selected by exactly one review-window selector and produce prioritized remediation tasks in `/reports/COMMIT_REVIEW_TASKS.md` without changing source code.
+Review recent commits selected by exactly one review-window selector and produce prioritized remediation tasks without changing source code.
 
 ## In Scope
 - Review recent changes using exactly one selector:
   - commit-count mode: `commits=<number>`
   - date mode: `since=<YYYY-MM-DD>`
-- Produce `/reports/COMMIT_REVIEW_TASKS.md` with:
-  - executive summary
-  - top urgent items
-  - findings sorted by priority (`P0` to `P3`)
-- Assign stable finding IDs using `P<priority>-<index>` (for example, `P0-1`, `P1-3`).
-- Require all cross-section references to use finding IDs (not title-only references).
-- Include required finding fields:
-  - finding ID
-  - priority
-  - commit hash
-  - file + line
-  - issue summary
-  - impact
-  - recommended fix
-  - confidence
-- Include verification steps for every finding.
-- Merge duplicate findings that represent the same underlying issue across commits.
-- Mark uncertain items as `NEEDS_MANUAL_VERIFICATION`.
-- Re-review mode: validate that findings marked `RESOLVED` in `/reports/COMMIT_REVIEW_TASKS.md` are truly fixed.
+- Produce prioritized findings with stable IDs (`P<priority>-<index>`).
+- Merge duplicate findings with explicit rationale.
+- Mark uncertain findings as `NEEDS_MANUAL_VERIFICATION`.
+- Support `re-review` mode that validates findings previously marked `RESOLVED`.
+- Publish structured review outcome events for handoff.
 
 ## Out of Scope
 - Editing source code or configuration files.
-- Reviewing commits outside the selected window.
 - Full-repository historical audits.
-- Runtime benchmarking, load testing, or deployment actions.
+- Deployment/load/performance actions.
 
 ## Inputs
 - Required:
   - Agent identifier: `recent-commit-review-agent`
   - Goal statement
-  - Review window with exactly one selector:
-    - `commits=<positive integer>`
-    - `since=<YYYY-MM-DD>`
-  - Mode:
-    - `review` (default)
-    - `re-review`
+  - Mode: `review` (default) or `re-review`
+  - Review window selector: exactly one of `commits=<positive integer>` or `since=<YYYY-MM-DD>`
+  - `task_identifier`
 - Optional:
-  - Review mode hint (`auto` by default)
-  - Focus areas (for example: security, data integrity, error handling)
-  - Exclusions (paths or file types to ignore)
+  - Review mode hint (`auto` default)
+  - Focus areas
+  - Exclusions
+  - `tracking_mode` (`linear` or `local`)
+  - `tracking_contract_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md`)
+  - `linear_comment_schema_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md`)
+  - `linear_issue_id`
+  - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `packet_type` (default: `REVIEW_TASK`)
+  - `local_issue_dir` (default: `/reports/issues/<task_identifier>/`)
+  - `local_state_path` (default: `<local_issue_dir>/state.yaml`)
+  - `local_events_path` (default: `<local_issue_dir>/events.jsonl`)
 
-## Skills
-- Required Skills:
-  - None for baseline recent-commit review.
-- Potentially Required Skills:
-  - `linear`: when findings should be created/updated as tracked issues.
-  - `spreadsheet`: when exporting findings/task lists into tabular artifacts.
-- If Missing, Install From:
-  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
-  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
-  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
-- Fallback Behavior If Skill Is Unavailable:
-  - Produce full markdown findings and priority plan in-repo.
-  - Skip issue-sync/export integrations.
-- Restart Note:
-  - After installing any missing skill, restart Codex before rerunning this agent.
-
-
-## MCP (If Needed)
-- Required MCP Servers:
-  - None for baseline recent-commit review.
-- Potentially Required MCP Servers:
-  - `linear`: when findings should be synchronized into issue tracking.
-- If Missing, Setup From:
-  - `/mcp/servers/linear.md`
-  - `/mcp/templates/mcp-config.example.toml`
-- Fallback Behavior If MCP Is Unavailable:
-  - Return complete markdown findings and action plan.
-  - Mark issue-sync as deferred.
-- Restart Note:
-  - After MCP setup/config changes, restart Codex before rerunning this agent.
-
+## Tracking Mode Contract
+- `tracking_mode=linear`:
+  - canonical state is Linear status + structured Linear comments
+  - read newest `AGENT_EVENT_V1` `task_packet` comment with `packet_type=REVIEW_TASK`
+  - publish structured review outcome comment
+- `tracking_mode=local`:
+  - canonical state is `/reports/issues/<task_identifier>/state.yaml` + `events.jsonl`
+  - read packet from `/reports/issues/<task_identifier>/REVIEW_TASK.yaml` when present
+  - append review outcome event to `events.jsonl` and update `state.yaml`
+- Resolution order when missing explicit mode:
+  1. `tracking_contract_path` rules
+  2. fallback to `linear` when `linear_issue_id` exists
+  3. otherwise `local`
 
 ## Outputs
-- Format:
-  - Primary deliverable: `/reports/COMMIT_REVIEW_TASKS.md`
-  - Sections:
-    - Executive Summary
-    - Top Urgent Items
-    - Findings (grouped and sorted by `P0`, `P1`, `P2`, `P3`)
-    - Duplicate Merge Notes
-    - Re-review Results (only in `re-review` mode)
-  - Each finding entry includes:
-    - Finding ID (`P<priority>-<index>`)
-    - Priority (`P0`-`P3`)
-    - Commit hash
-    - File + line
-    - Issue summary
-    - Impact
-    - Recommended fix
-    - Confidence (`high`, `medium`, or `low`)
-    - Verification steps
-    - Status (`OPEN`, `RESOLVED`, `REOPENED`, or `NEEDS_MANUAL_VERIFICATION`)
-- Location:
-  - Write report to `/reports/COMMIT_REVIEW_TASKS.md` (create `/reports` if missing)
-- Success criteria:
-  - Report exists at the required path and is ordered by priority.
-  - Findings are deduplicated across commits with merge rationale.
-  - Each finding has complete required fields and verification steps.
-  - Re-review mode validates only `RESOLVED` findings and updates their validation outcome.
+- Primary report:
+  - `/reports/issues/<task_identifier>/COMMIT_REVIEW_TASKS.md`
+- Report sections:
+  - Executive Summary
+  - Top Urgent Items
+  - Findings by priority (`P0`-`P3`)
+  - Duplicate Merge Notes
+  - Re-review Results (in `re-review` mode)
+- Structured event containing:
+  - `tracking_mode`, `task_identifier`, `role`, `event`, `handoff_to`, `branch`, `head_commit`, `checks`, `decision`, `packet_version`
+- `tracking_mode=linear`:
+  - optionally set issue status to workflow `agent_review_status` on start
+  - set status to workflow `agent_review_done_status` on pass
+  - post structured review outcome comment
+- `tracking_mode=local`:
+  - update `/reports/issues/<task_identifier>/state.yaml`
+  - append event to `/reports/issues/<task_identifier>/events.jsonl`
 
 ## Workflow
-1. Parse inputs and validate exactly one review selector is provided (`commits` XOR `since`).
-2. Resolve commit window from selector:
-   - `commits=<N>` uses the last `N` commits from `HEAD`.
-   - `since=<YYYY-MM-DD>` uses all commits on/after that date.
-3. Collect changed files and relevant hunks for the selected commits in read-only mode.
-4. Analyze changes for defects, regressions, and maintainability risks.
-5. Normalize findings and apply duplicate-merge rules across commits.
-6. Assign finding IDs by priority bucket (`P0-1`, `P0-2`, `P1-1`, ...).
-7. Assign priority (`P0`-`P3`) and confidence (`high`/`medium`/`low`).
-8. Ensure summary sections reference finding IDs:
-   - Executive Summary references top issues by finding ID.
-   - Top Urgent Items include finding IDs.
-   - Re-review outcomes reference existing finding IDs.
-9. If evidence is incomplete or ambiguous, set status to `NEEDS_MANUAL_VERIFICATION` and explain why.
-10. Add concrete verification steps to each finding.
-11. In `review` mode, write a complete prioritized report.
-12. In `re-review` mode, read `/reports/COMMIT_REVIEW_TASKS.md`, select only findings marked `RESOLVED`, and re-check whether fixes are real; mark each as confirmed fixed or reopened with evidence.
+1. Parse inputs and validate exactly one review selector is provided.
+2. Resolve tracking mode and per-issue state paths.
+3. Load latest role task packet:
+   - Linear: newest `AGENT_EVENT_V1` packet with `packet_type=REVIEW_TASK`
+   - Local: `/reports/issues/<task_identifier>/REVIEW_TASK.yaml` when present
+4. Resolve commit window from selector.
+5. Collect changed files/hunks for selected commits in read-only mode.
+6. Analyze changes for defects/regressions/maintainability risks.
+7. Normalize findings, merge duplicates, and assign finding IDs (`P0-1`, `P0-2`, ...).
+8. Ensure summaries reference finding IDs and include verification steps for every finding.
+9. Set `NEEDS_MANUAL_VERIFICATION` for ambiguous evidence.
+10. Write report to `/reports/issues/<task_identifier>/COMMIT_REVIEW_TASKS.md`.
+11. In `re-review` mode, re-check only findings marked `RESOLVED` from the report.
+12. Publish outcome event:
+   - pass -> `decision: review_passed`, `handoff_to: human_review`
+   - fail -> `decision: review_blocked`, `handoff_to: developer`
 
 ## Constraints
-- Read-only review for repository code:
-  - Allowed writes: `/reports/COMMIT_REVIEW_TASKS.md` only.
-  - Forbidden: source code edits, dependency updates, formatting passes, or refactors.
-- Finding IDs must be unique and stable within one report run.
-- In `re-review` mode, preserve existing finding IDs; do not renumber.
-- Do not reference findings by title alone when an ID exists; include finding ID.
-- Exactly one selector per run:
-  - valid: `commits=5`
-  - valid: `since=2026-02-01`
-  - invalid: both selectors set
-  - invalid: no selector set
-- Duplicate-finding merge rules across commits:
-  - Merge findings when root cause, affected logical code path, and issue type are equivalent.
-  - Keep one canonical finding entry.
-  - Preserve traceability by listing additional commit hashes under related evidence.
-  - Keep the highest severity observed among duplicates.
-- False-positive handling:
-  - Do not suppress uncertain findings silently.
-  - Mark uncertain findings as `NEEDS_MANUAL_VERIFICATION` with a short evidence gap note.
+- Read-only repository review (no source edits).
+- Exactly one selector per run (`commits` XOR `since`).
+- Preserve existing finding IDs during `re-review`.
+- Summary/review references must use finding IDs.
+- Do not write shared sprint state files.
+- In local mode, write only under `/reports/issues/<task_identifier>/`.
 
 ## Validation
-- Input contract checks:
-  - Exactly one review selector is present.
-  - `commits` is a positive integer when used.
-  - `since` matches `YYYY-MM-DD` when used.
-- Output completeness checks:
-  - `/reports/COMMIT_REVIEW_TASKS.md` exists.
-  - Report includes executive summary and top urgent items.
-  - Findings are sorted by priority from `P0` to `P3`.
-  - Each finding has a unique `Finding ID` matching `P<priority>-<index>`.
-  - Summary sections reference valid existing finding IDs.
-  - Every finding contains all required fields and verification steps.
-- Behavioral checks:
-  - Duplicate merge rationale is present when duplicates were found.
-  - Any uncertain finding is labeled `NEEDS_MANUAL_VERIFICATION`.
-  - In `re-review` mode, only `RESOLVED` findings are re-checked.
-  - In `re-review` mode, finding IDs are preserved from the baseline report.
-  - No repository source files changed.
+- Selector contract is valid.
+- Report exists at `/reports/issues/<task_identifier>/COMMIT_REVIEW_TASKS.md`.
+- Findings are sorted by priority and each has required fields.
+- Summary sections reference valid finding IDs.
+- Structured outcome event contains required fields.
+- Tracking update succeeds in selected mode.
 
 ## Failure Handling
 - Invalid selector contract:
-  - Signal: both `commits` and `since` provided, or neither provided.
-  - Action: stop and return contract error with valid examples.
+  - Signal: both/no selector provided
+  - Action: stop and return valid selector examples
 - Invalid selector value:
-  - Signal: non-positive `commits` or malformed date.
-  - Action: stop and request corrected selector value.
+  - Signal: non-positive `commits` or malformed date
+  - Action: stop and request corrected value
 - Empty commit window:
-  - Signal: no commits match the selector.
-  - Action: create report with explicit "No commits in selected window" result.
-- Missing or malformed report in `re-review` mode:
-  - Signal: `/reports/COMMIT_REVIEW_TASKS.md` absent or unparsable.
-  - Action: stop and request baseline review report regeneration.
-- Broken finding ID references:
-  - Signal: summary/re-review sections reference missing IDs or title-only mentions.
-  - Action: fail validation and regenerate summary sections using valid finding IDs.
-- ID drift in re-review:
-  - Signal: re-review output renumbers existing finding IDs.
-  - Action: fail validation and regenerate re-review preserving original IDs.
-- Missing line mapping (moved/renamed files):
-  - Signal: original file + line not directly resolvable.
-  - Action: keep finding with best-effort location and mark `NEEDS_MANUAL_VERIFICATION`.
+  - Signal: no commits match selector
+  - Action: write report with explicit empty-window result
+- Missing baseline report in `re-review`:
+  - Signal: issue-scoped report missing/unparsable
+  - Action: stop and request baseline regeneration
+- Missing task packet:
+  - Signal: no usable `REVIEW_TASK` packet in selected tracking mode
+  - Action: stop and request orchestrator packet refresh
 
 ## Definition of Done
 - Inputs pass selector contract (`commits` XOR `since`).
-- `/reports/COMMIT_REVIEW_TASKS.md` is generated with required sections.
-- Findings are prioritized (`P0`-`P3`), complete, and deduplicated.
-- Finding IDs are unique and cross-section references point to valid finding IDs.
-- Every finding includes verification steps and confidence.
-- `NEEDS_MANUAL_VERIFICATION` is used for uncertain items.
-- `re-review` mode checks only `RESOLVED` findings and reports validation outcomes.
+- Issue-scoped report is generated with required sections.
+- Findings are prioritized, deduplicated, and referenceable by ID.
+- Structured review outcome event is published in selected tracking mode.
 - No source code changes were made.
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.
 Scenario examples live in `EXAMPLES.md` in this folder.
-
-## Sample Output Structure
-Use this style to keep references consistent and import-ready:
-
-```md
-## Top Urgent Items
-1. [P0-1] Add authorization check to billing export endpoint.
-2. [P0-2] Prevent null dereference in payment retry worker.
-
-## Findings
-
-### P0
-
-#### Finding P0-1
-- **Finding ID:** P0-1
-- **Priority:** P0
-- **Commit hash:** a1b2c3d
-- **File + line:** `src/api/billing/export.ts:88`
-- **Issue summary:** Missing role validation before exporting billing data.
-- **Impact:** Unauthorized data export risk.
-- **Recommended fix:** Require explicit admin role and add negative authorization test.
-- **Confidence:** high
-- **Verification steps:** Run auth tests and verify non-admin request returns 403.
-- **Status:** OPEN
-```
 
 ## Self-Evaluation Rubric
 - Purpose clarity: 2/2
@@ -240,7 +145,3 @@ Use this style to keep references consistent and import-ready:
 - Failure recovery clarity: 2/2
 - Total: 16/16
 - Result: PASS
-- Top improvements:
-  1. Add a report schema appendix with a strict markdown table format.
-  2. Add optional risk-tag taxonomy (security, reliability, performance, maintainability).
-  3. Add a calibration guide mapping confidence to required verification depth.

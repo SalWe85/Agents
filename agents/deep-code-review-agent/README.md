@@ -1,236 +1,131 @@
 # Deep Code Review Agent
-Last Updated: 2026-02-15 19:18 CET
+Last Updated: 2026-02-16 13:58 CET
 
 ## Mission
-Perform deep, read-only code reviews across entire projects, especially codebases that have not had a full review in a long time, and produce a prioritized remediation task report.
+Perform deep read-only code reviews and produce prioritized remediation tasks with structured review outcomes.
 
 ## In Scope
 - Review repository code and supporting files in read-only mode.
-- Produce `/reports/REVIEW_TASKS.md` as the primary deliverable.
-- Prioritize fix tasks from `P0` (highest) to `P3` (lowest).
-- Require each task to include:
-  - priority
-  - title
-  - impact
-  - evidence (file + line)
-  - recommended fix
-  - estimated effort
-  - confidence
-  - verification steps
+- Produce prioritized task report with IDs (`P<priority>-<index>`).
 - Include required report sections:
   - Executive Summary
   - Top 10 Urgent Fixes
-  - Quick Wins (low effort, high impact)
+  - Quick Wins
   - Tasks by Priority (`P0`-`P3`)
   - Needs Manual Verification
   - Out-of-Scope
-- Apply chunking strategy for very large repositories (module/phase review).
-- Merge duplicate findings using explicit de-duplication rules.
-- Support `Re-review` mode that validates only tasks marked `RESOLVED` in `/reports/REVIEW_TASKS.md`.
+- Merge duplicate findings with explicit de-duplication rationale.
+- Support `Re-review` mode for tasks previously marked `RESOLVED`.
+- Publish structured review outcome events for handoff.
 
 ## Out of Scope
-- Modifying source code, tests, configuration, infrastructure, or documentation.
-- Running write operations or destructive commands.
-- Shipping fixes or implementing remediations.
-- Guaranteeing zero defects.
-- Replacing full manual security audits or production incident response.
+- Modifying source code/tests/config/infra/docs.
+- Shipping fixes or remediations.
+- Destructive commands.
 
 ## Inputs
 - Required:
-  - Repository root path to review
+  - Repository root path
   - Review mode: `Full Review` or `Re-review`
+  - `task_identifier`
 - Optional:
-  - Existing report path: `/reports/REVIEW_TASKS.md` (required in `Re-review` mode)
-  - Focus areas (modules, risk themes, compliance concerns)
-  - Time budget or depth constraints
+  - Existing report path (default for re-review): `/reports/issues/<task_identifier>/REVIEW_TASKS.md`
+  - Focus areas (modules/risk themes)
+  - Time budget/depth constraints
+  - `tracking_mode` (`linear` or `local`)
+  - `tracking_contract_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md`)
+  - `linear_comment_schema_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md`)
+  - `linear_issue_id`
+  - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
+  - `packet_type` (default: `REVIEW_TASK`)
+  - `local_issue_dir` (default: `/reports/issues/<task_identifier>/`)
+  - `local_state_path` (default: `<local_issue_dir>/state.yaml`)
+  - `local_events_path` (default: `<local_issue_dir>/events.jsonl`)
 
-## Skills
-- Required Skills:
-  - None for baseline deep review.
-- Potentially Required Skills:
-  - `linear`: when review findings must be converted into actionable issues.
-  - `spreadsheet`: when exporting prioritized task lists to tabular formats.
-- If Missing, Install From:
-  - Repo skill definitions: `/skills/linear/SKILL.md` and `/skills/spreadsheet/SKILL.md`
-  - Runtime skill locations: `$CODEX_HOME/skills/linear/SKILL.md` and `$CODEX_HOME/skills/spreadsheet/SKILL.md`
-  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
-- Fallback Behavior If Skill Is Unavailable:
-  - Deliver full markdown review with severity, evidence, and remediation steps.
-  - Skip automatic issue creation/export integrations.
-- Restart Note:
-  - After installing any missing skill, restart Codex before rerunning this agent.
-
-
-## MCP (If Needed)
-- Required MCP Servers:
-  - None for baseline deep review.
-- Potentially Required MCP Servers:
-  - `linear`: when review tasks should be created as trackable issues.
-- If Missing, Setup From:
-  - `/mcp/servers/linear.md`
-  - `/mcp/templates/mcp-config.example.toml`
-- Fallback Behavior If MCP Is Unavailable:
-  - Produce full markdown findings and prioritized tasks locally.
-  - Mark issue-sync actions as skipped.
-- Restart Note:
-  - After MCP setup/config changes, restart Codex before rerunning this agent.
-
+## Tracking Mode Contract
+- `tracking_mode=linear`:
+  - canonical state is Linear status + structured Linear comments
+  - read newest `AGENT_EVENT_V1` `task_packet` comment with `packet_type=REVIEW_TASK`
+  - publish structured review outcome comment
+- `tracking_mode=local`:
+  - canonical state is `/reports/issues/<task_identifier>/state.yaml` + `events.jsonl`
+  - read packet from `/reports/issues/<task_identifier>/REVIEW_TASK.yaml` when present
+  - append outcome event to `events.jsonl` and update `state.yaml`
+- Resolution order when missing explicit mode:
+  1. `tracking_contract_path` rules
+  2. fallback to `linear` when `linear_issue_id` exists
+  3. otherwise `local`
 
 ## Outputs
-- Format:
-  - Markdown report at `/reports/REVIEW_TASKS.md`
-  - Task sections sorted by priority from `P0` to `P3`
-  - Every task gets a stable identifier using this format: `P<priority>-<index>` (for example, `P0-1`, `P1-3`).
-  - Any mention of a task outside its detail block (Executive Summary, Top 10, Quick Wins, Re-review results) must reference that identifier.
-  - Every task includes required fields:
-    - `Task ID`
-    - `Priority`
-    - `Title`
-    - `Impact`
-    - `Evidence` (path + line)
-    - `Recommended Fix`
-    - `Estimated Effort` (`S`, `M`, `L`, or `XL`)
-    - `Confidence` (`high`, `medium`, or `low`)
-    - `Status` (`OPEN`, `RESOLVED`, `REOPENED`, or `NEEDS_MANUAL_VERIFICATION`)
-    - `Verification Steps`
-  - Separate `Needs Manual Verification` section for potential false positives.
-  - Explicit `Out-of-Scope` section.
-- Location:
-  - Repository-relative path: `/reports/REVIEW_TASKS.md`
-- Success criteria:
-  - Report is complete, deduplicated, and actionable without code changes.
-  - `Re-review` mode produces clear validation outcomes for `RESOLVED` tasks.
+- Report at `/reports/issues/<task_identifier>/REVIEW_TASKS.md`.
+- Tasks sorted by `P0` through `P3` with required fields:
+  - `Task ID`, `Priority`, `Title`, `Impact`, `Evidence`, `Recommended Fix`, `Estimated Effort`, `Confidence`, `Status`, `Verification Steps`
+- Structured event containing:
+  - `tracking_mode`, `task_identifier`, `role`, `event`, `handoff_to`, `branch`, `head_commit`, `checks`, `decision`, `packet_version`
+- `tracking_mode=linear`:
+  - optionally set issue status to workflow `agent_review_status` on start
+  - set status to workflow `agent_review_done_status` on pass
+  - post structured outcome comment
+- `tracking_mode=local`:
+  - update `/reports/issues/<task_identifier>/state.yaml`
+  - append event to `/reports/issues/<task_identifier>/events.jsonl`
 
 ## Workflow
 1. Read inputs and determine mode (`Full Review` or `Re-review`).
-2. In `Full Review`, inventory repository structure and risk hotspots.
-3. Select chunking strategy based on repository size and complexity:
-   - Small: single pass
-   - Medium: review by module/package
-   - Large: phased passes (`critical paths` -> `shared libraries` -> `remaining modules`)
-4. Review each chunk read-only and record evidence-backed findings.
-5. Convert findings into task candidates with all required task fields, including verification steps.
-6. Assign a stable task ID to each task (`P0-1`, `P0-2`, `P1-1`, ...).
-7. Ensure all cross-references use IDs:
-   - Executive Summary references top issues by task ID.
-   - Top 10 Urgent Fixes entries include task ID.
-   - Quick Wins entries include task ID.
-   - Re-review outcomes reference existing task IDs.
-8. Apply duplicate merge rules:
-   - Merge tasks with same root cause and materially same fix.
-   - Keep strongest priority among merged items.
-   - Preserve multiple evidence locations under one task.
-   - Do not merge unrelated symptoms that need different fixes.
-9. Assign confidence and status values; route uncertain items to `Needs Manual Verification` with status `NEEDS_MANUAL_VERIFICATION`.
-10. Build `/reports/REVIEW_TASKS.md` with required sections, including executive summary, top 10 urgent fixes, and quick wins.
-11. In `Re-review` mode, inspect only tasks currently marked `RESOLVED` and classify each as:
-   - `RESOLVED` (still verified)
-   - `REOPENED`
-   - `NEEDS_MANUAL_VERIFICATION`
-12. Finalize report consistency checks (sorting, field completeness, section completeness, and ID reference integrity).
+2. Resolve tracking mode and per-issue state paths.
+3. Load latest role task packet:
+   - Linear: newest `AGENT_EVENT_V1` packet with `packet_type=REVIEW_TASK`
+   - Local: `/reports/issues/<task_identifier>/REVIEW_TASK.yaml` when present
+4. In `Full Review`, inventory repo structure and risk hotspots.
+5. Select chunking strategy based on repo size (single pass, module pass, or phased pass).
+6. Review each chunk read-only and record evidence-backed findings.
+7. Convert findings into tasks with required fields and assign stable task IDs.
+8. Apply duplicate merge rules and keep strongest priority among duplicates.
+9. Route uncertain items to `Needs Manual Verification` with status `NEEDS_MANUAL_VERIFICATION`.
+10. Write report to `/reports/issues/<task_identifier>/REVIEW_TASKS.md`.
+11. In `Re-review`, inspect only tasks marked `RESOLVED` and classify each as `RESOLVED`, `REOPENED`, or `NEEDS_MANUAL_VERIFICATION`.
+12. Publish outcome event:
+   - pass -> `decision: review_passed`, `handoff_to: human_review`
+   - fail -> `decision: review_blocked`, `handoff_to: developer`
 
 ## Constraints
-- Review is strictly read-only; no code changes are allowed.
-- Every non-manual task requires concrete evidence with file and line references.
-- Task IDs must be unique and stable within the report.
-- In `Re-review` mode, preserve existing task IDs; do not renumber tasks.
-- Do not reference tasks by title alone when an ID exists; always include the task ID.
-- Tasks must remain actionable and specific; avoid vague recommendations.
-- Priority ordering must be deterministic (`P0`, `P1`, `P2`, `P3`).
-- Use only allowed enum values for `Status`, `Confidence`, and `Estimated Effort`.
-- False positives must not be mixed with confirmed tasks.
-- Re-review must evaluate only tasks marked `RESOLVED`.
+- Review is strictly read-only.
+- Every non-manual task requires concrete evidence with file/line references.
+- Task IDs must be unique and stable within report.
+- In `Re-review`, preserve existing task IDs.
+- Do not write shared sprint state files.
+- In local mode, write only under `/reports/issues/<task_identifier>/`.
 
 ## Validation
-- Required files for this agent package exist:
-  - `README.md`
-  - `USAGE_TEMPLATE.md`
-  - `EXAMPLES.md`
-- Report-level checks for `/reports/REVIEW_TASKS.md`:
-  - Contains sections:
-    - `Executive Summary`
-    - `Top 10 Urgent Fixes`
-    - `Quick Wins`
-    - `Tasks by Priority`
-    - `Needs Manual Verification`
-    - `Out-of-Scope`
-  - Tasks are grouped/sorted by `P0` through `P3`.
-  - Every task has a unique `Task ID` matching `P<priority>-<index>`.
-  - Every task mention in summary sections includes a valid existing `Task ID`.
-  - Top 10 and Quick Wins entries reference valid task IDs without duplicates.
-  - Every task uses allowed enum values for `Status`, `Confidence`, and `Estimated Effort`.
-  - Each task includes all required fields and verification steps.
-- Re-review checks:
-  - Only tasks labeled `RESOLVED` are re-evaluated.
-  - Existing task IDs are preserved in re-review output.
-  - Each re-reviewed task has a status outcome and evidence.
+- Required report sections exist.
+- Tasks are grouped/sorted by `P0` through `P3`.
+- Every task has unique valid `Task ID`.
+- Summary sections reference valid task IDs.
+- Structured outcome event contains required fields.
+- Tracking update succeeds in selected mode.
 
 ## Failure Handling
 - Missing repository path:
-  - Signal: review target not provided or inaccessible
-  - Action: stop and request a valid repository path
-- Missing report in `Re-review` mode:
-  - Signal: `/reports/REVIEW_TASKS.md` missing
-  - Action: fail fast and request existing report
-- Incomplete task data:
-  - Signal: task missing required fields (for example, no task ID, no status, no evidence, or no verification steps)
-  - Action: mark report incomplete and require regeneration
-- Broken cross-reference integrity:
-  - Signal: Top 10/Quick Wins/Executive Summary reference title only or reference non-existent task IDs
-  - Action: fail validation and regenerate summary sections with valid task IDs
-- Invalid enum values:
-  - Signal: unsupported values in `Status`, `Confidence`, or `Estimated Effort`
-  - Action: fail validation and normalize to allowed enums
-- ID drift in re-review:
-  - Signal: re-review renumbers existing task IDs
-  - Action: fail validation and regenerate re-review preserving original IDs
-- Excess duplicate tasks:
-  - Signal: repeated tasks with same root cause/fix appear across sections
-  - Action: merge duplicates and preserve all evidence references
-- Uncertain finding quality:
-  - Signal: weak or environment-dependent evidence
-  - Action: move item to `Needs Manual Verification`
+  - Signal: target not provided or inaccessible
+  - Action: stop and request valid repository path
+- Missing baseline report in `Re-review`:
+  - Signal: issue-scoped report missing/unparsable
+  - Action: stop and request baseline regeneration
+- Missing task packet:
+  - Signal: no usable `REVIEW_TASK` packet in selected tracking mode
+  - Action: stop and request orchestrator packet refresh
+- Broken task references:
+  - Signal: summary sections reference missing IDs
+  - Action: fail validation and regenerate summary sections with valid IDs
 
 ## Definition of Done
-- Agent outputs `/reports/REVIEW_TASKS.md` with all required sections.
-- Tasks are prioritized (`P0`-`P3`), deduplicated, and include all required fields.
-- Task identifiers are unique and all summary references point to valid task IDs.
-- Status/effort/confidence fields use the defined enums consistently.
-- Executive summary, top 10 urgent fixes, quick wins, and out-of-scope are explicit.
-- False positives are separated in `Needs Manual Verification`.
-- Re-review mode validates only `RESOLVED` tasks with clear outcomes.
-- Review process remains read-only.
+- Issue-scoped review report is generated with required sections.
+- Tasks are prioritized, deduplicated, and referenceable by ID.
+- Structured review outcome event is published in selected tracking mode.
+- Review remains read-only with no source changes.
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.
 Scenario examples live in `EXAMPLES.md` in this folder.
-
-## Sample Output Structure
-Use this style to keep references consistent and import-friendly:
-
-```md
-## Top 10 Urgent Fixes
-1. [P0-1] Rotate exposed production API key used by mobile clients.
-2. [P0-2] Enforce auth checks on admin export endpoint.
-
-## Quick Wins
-- [P1-2] Add request timeout to external pricing call.
-
-## Tasks by Priority
-
-### P0
-
-#### Task P0-1
-- **Task ID:** P0-1
-- **Priority:** P0
-- **Title:** Rotate exposed production API key used by mobile clients
-- **Impact:** Immediate credential abuse risk from leaked key.
-- **Evidence:** `mobile/src/config.ts:14`
-- **Recommended Fix:** Move key to secure server-side secret store and rotate immediately.
-- **Estimated Effort:** M
-- **Confidence:** high
-- **Status:** OPEN
-- **Verification Steps:** Confirm old key is revoked and requests with old key fail in staging/prod.
-```
 
 ## Self-Evaluation Rubric
 - Purpose clarity: 2/2
@@ -243,7 +138,3 @@ Use this style to keep references consistent and import-friendly:
 - Failure recovery clarity: 2/2
 - Total: 16/16
 - Result: PASS
-- Top improvements:
-  1. Add optional language-specific review checklists.
-  2. Add optional task ID conventions for long-running remediation programs.
-  3. Add an optional machine-readable export schema for dashboards.

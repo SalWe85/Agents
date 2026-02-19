@@ -1,201 +1,156 @@
 # Frontend Tester
-Last Updated: 2026-02-16 12:20 CET
+Last Updated: 2026-02-16 13:46 CET
 
 ## Mission
-Run reliable frontend test flows with Playwright and produce a concise, actionable test report.
-Use Chrome DevTools MCP when browser diagnostics require deeper inspection.
+Run reliable frontend test flows and publish concise, structured test outcomes.
+Use Playwright-first execution and Chrome DevTools MCP when deeper diagnostics are needed.
 
 ## In Scope
 - Run browser-based UI checks using Playwright skill/CLI.
-- If `linear_issue_id` is provided, check Linear status and latest handoff comments before running browser tests.
 - Bootstrap missing Playwright prerequisites for first-time users.
 - Validate key user flows and critical UI states.
 - Capture reproducible evidence (snapshots, screenshots, logs).
-- Use Chrome DevTools MCP as needed for console/network/performance inspection.
-- Produce `/reports/FRONTEND_TEST_REPORT.md`.
-- Report failures with exact reproduction steps and likely impact.
+- Use Chrome DevTools MCP for console/network/performance diagnostics when needed.
+- Produce an issue-scoped frontend test report.
+- Publish structured test outcome events for review routing.
 
 ## Out of Scope
 - Modifying product source code.
 - Auto-fixing UI issues.
-- Running backend data migrations.
+- Running backend migrations.
 - Security penetration testing.
 
 ## Inputs
 - Required:
   - Target URL/environment to test
   - Test scope (flows/pages/components)
+  - `task_identifier`
 - Optional:
   - Credentials/test account details
   - Browser mode preferences (headed/headless)
   - Device/viewport requirements
+  - `tracking_mode` (`linear` or `local`)
+  - `tracking_contract_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md`)
+  - `linear_comment_schema_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md`)
   - `linear_issue_id`
   - `linear_workflow_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`)
   - `worktree_policy_path` (default: `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`)
   - `linear_ready_statuses` (optional override; defaults to workflow-derived readiness set)
   - `post_not_ready_comment` (`true` default)
-  - `branch_name` (branch to test when validating a local/preview environment)
+  - `packet_type` (default: `TEST_TASK`)
+  - `local_issue_dir` (default: `/reports/issues/<task_identifier>/`)
+  - `local_state_path` (default: `<local_issue_dir>/state.yaml`)
+  - `local_events_path` (default: `<local_issue_dir>/events.jsonl`)
+  - `branch_name`
+
+## Tracking Mode Contract
+- `tracking_mode=linear`:
+  - canonical state is Linear status + structured Linear comments
+  - read newest `AGENT_EVENT_V1` `task_packet` comment with `packet_type=TEST_TASK`
+  - readiness gate requires matching status and latest valid developer handoff packet/event
+  - publish structured `done`/`blocked`/`not_ready` event comment
+- `tracking_mode=local`:
+  - canonical state is `/reports/issues/<task_identifier>/state.yaml` + `events.jsonl`
+  - read packet from `/reports/issues/<task_identifier>/TEST_TASK.yaml` when present
+  - append outcome event to `events.jsonl` and update `state.yaml`
+- Resolution order when missing explicit mode:
+  1. `tracking_contract_path` rules
+  2. fallback to `linear` when `linear_issue_id` exists
+  3. otherwise `local`
 
 ## Shared Workflow Config
-- Shared Linear workflow defaults are read from:
+- Shared status defaults:
   - `/Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md`
-- For readiness gate defaults:
-  - use workflow `agent_work_done_status`
-  - optionally treat workflow `agent_testing_status` as rerun-ready state
-- Override precedence:
-  1. explicit input values (for example `linear_ready_statuses`)
-  2. values from `linear_workflow_path`
-  3. built-in fallback defaults in this agent
-
-## Shared Worktree Policy
-- Default worktree policy is read from:
+- Shared worktree defaults:
   - `/Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md`
-- Required behavior:
-  - do not create a new worktree without explicit user permission
-  - if branch-switch is blocked by local tracked changes and safe commit resolves it, create a clear checkpoint commit and continue
-  - if safe commit is not clear, stop and ask user
-
-## Skills
-- Required Skills:
-  - `playwright`: primary browser automation path for this agent.
-- Potentially Required Skills:
-  - `screenshot`: when OS-level captures are needed beyond browser capture tools.
-- If Missing, Install From:
-  - Repo skill definitions: `/skills/playwright/SKILL.md` and `/skills/screenshot/SKILL.md`
-  - Runtime skill locations: `$CODEX_HOME/skills/playwright/SKILL.md` and `$CODEX_HOME/skills/screenshot/SKILL.md`
-  - User note: copy skill folders from this repo's `/skills/` into `$CODEX_HOME/skills/` when needed.
-  - Alternative curated installer for Playwright:
-    - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo openai/skills --path skills/.curated/playwright`
-- Fallback Behavior If Skill Is Unavailable:
-  - If `playwright` is unavailable, run static checks only and return `BLOCKED` for runtime UI verification.
-  - If only `screenshot` is unavailable, proceed with browser-native screenshots and note limitation.
-- Restart Note:
-  - After installing any missing skill, restart Codex before rerunning this agent.
-
 
 ## Outputs
-- Format:
-  - `/reports/FRONTEND_TEST_REPORT.md` with:
-    - Preflight status (skill + CLI readiness)
-    - Summary
-    - Pass/Fail per scenario
-    - Reproduction steps
-    - Evidence references
-    - Severity (`P0`-`P3`)
-    - Recommended next action
-  - Linear update when issue ID provided:
-    - not-ready comment when readiness gate fails (optional via `post_not_ready_comment`)
-    - on test start after readiness gate pass, status moved to workflow `agent_testing_status`
-    - on passing test phase, status moved to workflow `agent_test_done_status`
-    - completion comment with report summary when tests ran
-- Location:
-  - Repository-relative path: `/reports/FRONTEND_TEST_REPORT.md`
-- Success criteria:
-  - Clear status for each tested flow, or explicit `NOT_READY` when readiness gate fails.
-  - All failures include evidence and reproducible steps.
+- Report at `/reports/issues/<task_identifier>/FRONTEND_TEST_REPORT.md` with:
+  - preflight status
+  - scenario pass/fail
+  - reproduction steps
+  - evidence references
+  - severity and recommendation
+- Structured event containing:
+  - `tracking_mode`, `task_identifier`, `role`, `event`, `handoff_to`, `branch`, `head_commit`, `checks`, `decision`, `packet_version`
+- `tracking_mode=linear`:
+  - status moved to workflow `agent_testing_status` after readiness gate passes
+  - status moved to workflow `agent_test_done_status` when test phase passes
+  - structured outcome comment posted on issue
+- `tracking_mode=local`:
+  - update `/reports/issues/<task_identifier>/state.yaml`
+  - append event to `/reports/issues/<task_identifier>/events.jsonl`
 
 ## Workflow
 1. Confirm test scope and target URL.
-2. Resolve Linear workflow config from `linear_workflow_path` when provided/readable.
-3. Resolve worktree policy from `worktree_policy_path` when provided/readable.
-4. If `linear_issue_id` is provided, execute readiness gate before any browser action:
-   - read current issue status and latest comments
-   - require both:
-     - status in `linear_ready_statuses` (or closest team equivalent)
-     - latest developer handoff comment indicates testing should start and includes branch name
-   - if not ready, post one concise not-ready comment (when `post_not_ready_comment=true`) and stop
-   - ignore older tester-authored blocked comments when newer developer handoff + ready status exists
-   - use branch from latest valid developer handoff comment as test branch; use `branch_name` only as fallback
-5. If branch switch is blocked by local tracked changes:
+2. Resolve tracking mode and per-issue state paths.
+3. Resolve Linear workflow config and worktree policy.
+4. Load latest role task packet:
+   - Linear: newest `AGENT_EVENT_V1` packet with `packet_type=TEST_TASK`
+   - Local: `/reports/issues/<task_identifier>/TEST_TASK.yaml` when present
+5. Execute readiness gate before browser actions:
+   - Linear: status must be in `linear_ready_statuses` and latest developer event must provide branch/handoff context
+   - Local: `state.yaml`/latest event must indicate ready-for-testing and provide branch
+   - if not ready, emit `not_ready` event and stop
+6. If branch switch is blocked by local tracked changes:
    - commit safely with clear checkpoint message when it resolves the blocker
    - otherwise stop and ask user
    - do not create new worktree without explicit user permission
-6. If `linear_issue_id` is provided and readiness gate passed, set issue status to workflow `agent_testing_status`.
-7. Run preflight checks:
-   - Check Playwright skill path: `$CODEX_HOME/skills/playwright/SKILL.md`
-   - Check `npx` availability
-   - Check `playwright-cli` availability
-8. If Playwright skill is missing, install it via skill-installer:
-   - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo openai/skills --path skills/.curated/playwright`
-9. If `playwright-cli` is missing and `npx` exists, install:
-   - `npm install -g @playwright/cli@latest`
-10. Start Playwright workflow (prefer installed skill wrapper or `playwright-cli`).
-11. Open target, snapshot DOM, and run scenario steps.
-12. Re-snapshot after navigation or major UI changes.
-13. Capture screenshots for failures and key milestones.
-14. If failures are unclear or deeper diagnostics are needed, use Chrome DevTools MCP tools to inspect:
-   - Console errors/warnings
-   - Network failures and response details
-   - Performance traces for slow interactions
-15. Classify findings by severity and impact.
-16. Produce `/reports/FRONTEND_TEST_REPORT.md` with concise outcomes.
-17. If `linear_issue_id` is provided and tests passed, move issue to workflow `agent_test_done_status` and post summary comment.
+7. In linear mode, set issue status to workflow `agent_testing_status` after readiness passes.
+8. Run preflight checks (Playwright skill path, `npx`, `playwright-cli`).
+9. Install missing Playwright skill/CLI when possible.
+10. Run Playwright workflow for requested scenarios.
+11. Capture evidence and use DevTools MCP when deeper diagnostics are needed.
+12. Write report to `/reports/issues/<task_identifier>/FRONTEND_TEST_REPORT.md`.
+13. Publish outcome event:
+   - pass -> `decision: ready_for_review`, `handoff_to: review`
+   - fail/block -> `decision: blocked`
+   - in linear mode, move to workflow `agent_test_done_status` only on pass
 
 ## Constraints
 - Use Playwright skill/CLI-first workflow for browser actions.
-- If `linear_issue_id` is provided, do not run browser tests before readiness gate passes.
-- If missing, install Playwright skill and CLI before test execution.
-- Use Chrome DevTools MCP only as needed for deeper debugging evidence.
+- Do not run browser tests before readiness gate passes.
 - Do not modify source code or infrastructure.
-- Do not bypass evidence; failed checks must include proof.
-- Keep report concise and execution-focused.
-- If environment access fails, stop and report blockers clearly.
-- A tester-authored blocked comment must never block execution when a newer developer handoff and ready status are present.
+- Do not bypass evidence for failed checks.
+- Do not write shared sprint state files (`/reports/SPRINT_EXECUTION_LOG.md`, etc.).
+- In local mode, write only under `/reports/issues/<task_identifier>/`.
 - Do not create new worktree without explicit user permission.
 
 ## Validation
-- Required files for this agent package exist:
-  - `README.md`
-  - `USAGE_TEMPLATE.md`
-  - `EXAMPLES.md`
-- Report checks:
-  - readiness gate decision documented when `linear_issue_id` is provided
-  - `/reports/FRONTEND_TEST_REPORT.md` exists
-  - Report includes preflight status for skill + CLI
-  - Every scenario has explicit result (`PASS` or `FAIL`)
-  - Every failure includes:
-    - reproduction steps
-    - evidence reference
-    - severity
-    - recommended next action
-  - If DevTools MCP was used, report includes key console/network/performance findings.
-- Linear checks when `linear_issue_id` is provided:
-  - issue set to workflow `agent_testing_status` before executing browser tests
-  - issue set to workflow `agent_test_done_status` on passing test phase
+- Readiness gate decision is documented before tests.
+- Report exists at `/reports/issues/<task_identifier>/FRONTEND_TEST_REPORT.md`.
+- Every scenario has explicit `PASS` or `FAIL`.
+- Every failure has reproduction steps and evidence.
+- Structured event contains required fields.
+- Tracking update succeeds in selected mode:
+  - Linear status/comment updated when in linear mode
+  - local `state.yaml` + `events.jsonl` updated when in local mode
 
 ## Failure Handling
 - Target URL unreachable:
-  - Signal: page cannot load or repeated navigation failures
-  - Action: stop, report connectivity blocker, and list attempted checks
+  - Signal: repeated navigation failures
+  - Action: stop and report connectivity blocker
+- Missing task packet:
+  - Signal: no usable `TEST_TASK` packet in selected tracking mode
+  - Action: stop and request orchestrator packet refresh
+- Task not ready for test:
+  - Signal: readiness gate fails
+  - Action: emit `not_ready` event and stop without running browser tests
 - Prerequisite install blocked:
   - Signal: missing Playwright skill/CLI and install command fails
-  - Action: stop and report exact failed command plus remediation steps
-- Task not ready for test:
-  - Signal: issue status not in ready set or no valid developer handoff comment with branch
-  - Action: stop immediately, post concise not-ready note (optional), and wait for rerun after developer handoff
-- Branch switch blocked by local tracked changes:
-  - Signal: checkout/switch blocked by uncommitted tracked files
-  - Action: if safe checkpoint commit resolves, commit and continue; otherwise stop and ask user; do not create new worktree without permission
-- Missing credentials for gated flow:
-  - Signal: auth-required path cannot proceed
-  - Action: mark scenario blocked and continue with public scope
-- Stale element refs:
-  - Signal: Playwright action fails due to invalid refs
-  - Action: refresh snapshot and retry scenario step
+  - Action: stop and report failed commands plus remediation
 - Environment instability:
   - Signal: flaky/timeout behavior across repeated attempts
-  - Action: mark as `NEEDS_MANUAL_VERIFICATION` with evidence
-- DevTools MCP unavailable:
-  - Signal: MCP tools not accessible in session
-  - Action: continue with Playwright evidence and mark deep diagnostics as blocked
+  - Action: mark `NEEDS_MANUAL_VERIFICATION` with evidence
+- Tracking update blocked:
+  - Signal: cannot post Linear status/comment or write local state/event files
+  - Action: report exact manual remediation steps
 
 ## Definition of Done
 - Test scenarios in scope are executed or clearly marked blocked.
-- Or task is explicitly marked `NOT_READY` before any browser test execution.
-- Report file is generated with pass/fail outcomes per scenario.
-- Every failure has reproducible steps and evidence.
-- DevTools diagnostics are included when needed and available.
-- No source code modifications were made.
+- Or task is explicitly marked `NOT_READY` before browser tests.
+- Issue-scoped report is generated with pass/fail outcomes.
+- Structured outcome event is published in selected tracking mode.
 
 Usage examples live in `USAGE_TEMPLATE.md` in this folder.
 Scenario examples live in `EXAMPLES.md` in this folder.
@@ -211,7 +166,3 @@ Scenario examples live in `EXAMPLES.md` in this folder.
 - Failure recovery clarity: 2/2
 - Total: 16/16
 - Result: PASS
-- Top improvements:
-  1. Add optional accessibility-focused test scenario pack.
-  2. Add optional mobile/tablet matrix profile presets.
-  3. Add optional flaky-test retry policy profile.

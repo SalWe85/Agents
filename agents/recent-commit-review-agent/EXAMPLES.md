@@ -1,80 +1,65 @@
 # Examples
 
-Use these as starting points. Review and adapt them to your repository context, review goals, and risk tolerance.
+Use these as starting points. Adapt review depth, commit window, and risk focus for your repository.
 
-## Example 1: Commit-Count Review (Recent Burst)
+## Example 1: Linear Mode Recent-Commit Review from REVIEW_TASK Packet
 
 ### Input
 ```text
 Agent: recent-commit-review-agent
-Goal: Review the latest implementation burst and identify urgent regressions first.
-Review mode: auto
+Goal: Review recent payment-service commits for high-impact regressions.
 Mode: review
+Review mode: auto
+Inputs: task_identifier: PAY-221
 Review window: commits=12
-Primary deliverable: /reports/COMMIT_REVIEW_TASKS.md
-Constraints:
-- Exactly one selector in Review window: commits=<number> OR since=<YYYY-MM-DD>
-- Read-only review. Do not modify source code.
-Output: Executive summary, top urgent items, and prioritized findings with verification steps.
+Inputs: tracking_mode: linear
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: linear_issue_id: PAY-221
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: packet_type: REVIEW_TASK
+Inputs: local_issue_dir: /workspace/payments-service/reports/issues/PAY-221/
+Inputs: local_state_path: /workspace/payments-service/reports/issues/PAY-221/state.yaml
+Inputs: local_events_path: /workspace/payments-service/reports/issues/PAY-221/events.jsonl
+Primary deliverable: /reports/issues/<task_identifier>/COMMIT_REVIEW_TASKS.md
+Constraints: Read-only review. Exactly one selector (`commits` or `since`). Consume latest REVIEW_TASK packet and publish structured review outcome event.
+Output: Executive summary, urgent findings, prioritized list, and verification steps.
 ```
 
 ### Expected Output
 ```text
-Writes /reports/COMMIT_REVIEW_TASKS.md.
-Includes Executive Summary and Top Urgent Items.
-Lists findings grouped and sorted by P0, P1, P2, P3.
-Each finding includes finding ID, priority, commit hash, file+line, issue summary, impact, recommended fix, confidence, status, and verification steps.
-Top Urgent Items reference findings by ID and IDs match detailed finding blocks.
-Merges duplicate findings across commits and records merge rationale.
-Labels uncertain findings as NEEDS_MANUAL_VERIFICATION.
+Reads latest REVIEW_TASK packet from issue comments.
+Writes /reports/issues/PAY-221/COMMIT_REVIEW_TASKS.md.
+Findings are deduplicated, prioritized P0-P3, and reference stable finding IDs.
+Posts structured review outcome event (review_passed or review_blocked).
 ```
 
-### Sample Finding List + Detail Snippet
-```md
-## Top Urgent Items
-1. [P0-1] Add authorization check to billing export endpoint.
-2. [P1-1] Harden retry error handling for transient payment failures.
-
-## Findings
-
-### P0
-
-#### Finding P0-1
-- **Finding ID:** P0-1
-- **Priority:** P0
-- **Commit hash:** a1b2c3d
-- **File + line:** `src/api/billing/export.ts:88`
-- **Issue summary:** Missing role validation before exporting billing data.
-- **Impact:** Unauthorized data export risk.
-- **Recommended fix:** Require explicit admin role and add negative authorization test.
-- **Confidence:** high
-- **Verification steps:** Verify non-admin request returns 403 and admin path still succeeds.
-- **Status:** OPEN
-```
-
-## Example 2: Date-Based Re-review of Resolved Findings
+## Example 2: Local Mode Re-review of Resolved Findings
 
 ### Input
 ```text
 Agent: recent-commit-review-agent
-Goal: Re-check only findings previously marked RESOLVED and confirm they are truly fixed.
-Review mode: auto
+Goal: Re-check findings previously marked RESOLVED.
 Mode: re-review
+Review mode: auto
+Inputs: task_identifier: PAY-221
 Review window: since=2026-02-01
-Primary deliverable: /reports/COMMIT_REVIEW_TASKS.md
-Constraints:
-- Exactly one selector in Review window: commits=<number> OR since=<YYYY-MM-DD>
-- Read-only review. Do not modify source code.
-Output: Re-review validation results for RESOLVED findings only.
+Inputs: tracking_mode: local
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: packet_type: REVIEW_TASK
+Inputs: local_issue_dir: /workspace/payments-service/reports/issues/PAY-221/
+Inputs: local_state_path: /workspace/payments-service/reports/issues/PAY-221/state.yaml
+Inputs: local_events_path: /workspace/payments-service/reports/issues/PAY-221/events.jsonl
+Primary deliverable: /reports/issues/<task_identifier>/COMMIT_REVIEW_TASKS.md
+Constraints: Read-only review. Preserve existing finding IDs. Write only issue-scoped files and local events.
+Output: Re-review results for RESOLVED findings and structured local outcome event.
 ```
 
 ### Expected Output
 ```text
-Reads /reports/COMMIT_REVIEW_TASKS.md and targets only findings marked RESOLVED.
-Validates whether each resolved item is truly fixed in the current code state.
-Marks each item as confirmed fixed or REOPENED with evidence.
-Keeps report ordered by priority and preserves commit/file traceability.
-References each re-reviewed item by finding ID.
-Preserves existing finding IDs without renumbering.
-Leaves non-RESOLVED findings untouched in re-review scope.
+Reads local REVIEW_TASK packet and baseline issue-scoped review report.
+Re-checks only RESOLVED findings and preserves existing IDs.
+Writes updated /reports/issues/PAY-221/COMMIT_REVIEW_TASKS.md.
+Appends structured review outcome event to local events.jsonl.
 ```

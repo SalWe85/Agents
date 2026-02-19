@@ -1,75 +1,65 @@
 # Examples
 
-Use these as starting points. Review them carefully and adapt target flows, credentials, and severity thresholds to your own project.
+Use these as starting points. Adapt flow scope, credentials, and severity thresholds to your project.
 
-## Example 1: First-Time User Setup + Test Run
+## Example 1: Linear Mode Browser Validation from TEST_TASK Packet
 
 ### Input
 ```text
 Agent: frontend-tester
-Goal: Validate authentication and checkout flows for first-time project setup.
+Goal: Validate authentication and checkout flows for release candidate.
+Inputs: task_identifier: SHOP-301
 Inputs: Target URL/environment: https://staging.shop.example
-Inputs: Key user flows to validate: sign in, add to cart, checkout confirmation.
-Inputs: Credentials or test account details: use qa_checkout_user from team vault.
+Inputs: Key user flows to validate: sign in, add to cart, checkout confirmation
+Inputs: Credentials or test account details: use qa_checkout_user from team vault
+Inputs: tracking_mode: linear
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
 Inputs: linear_issue_id: SHOP-301
 Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
 Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
-Constraints: Use Playwright skill and playwright-cli first. If missing, install both first. Use Chrome DevTools MCP only when deeper diagnostics are needed. No source code changes.
-Output: /reports/FRONTEND_TEST_REPORT.md
+Inputs: linear_ready_statuses: Agent work DONE, Agent testing
+Inputs: packet_type: TEST_TASK
+Inputs: local_issue_dir: /workspace/shop-web/reports/issues/SHOP-301/
+Inputs: local_state_path: /workspace/shop-web/reports/issues/SHOP-301/state.yaml
+Inputs: local_events_path: /workspace/shop-web/reports/issues/SHOP-301/events.jsonl
+Constraints: Consume latest TEST_TASK packet, run readiness gate before browser actions, use Playwright first, and publish structured outcome event.
+Output: /reports/issues/<task_identifier>/FRONTEND_TEST_REPORT.md and structured outcome.
 ```
 
 ### Expected Output
 ```text
-Preflight checks run first and report skill/CLI readiness.
-When Linear issue context is provided, readiness gate (status + developer handoff comment) is checked before browser testing.
-If missing, Playwright skill and CLI are installed before tests continue.
-Report includes pass/fail per scenario, evidence links, severity, and recommended next actions.
+Reads latest TEST_TASK packet and verifies readiness before browser execution.
+Runs Playwright flows and captures evidence.
+Writes /reports/issues/SHOP-301/FRONTEND_TEST_REPORT.md.
+On pass: updates issue to test-done and posts structured ready_for_review event.
 ```
 
-## Example 2: Regression Smoke Before Release
+## Example 2: Local Mode Flaky Investigation with DevTools Evidence
 
 ### Input
 ```text
 Agent: frontend-tester
-Goal: Run smoke checks on critical user journeys before release candidate signoff.
-Inputs: Target URL/environment: https://rc.app.example
-Inputs: Key user flows to validate: login, dashboard load, profile update, log out.
-Inputs: Credentials or test account details: use qa_release_candidate account.
-Inputs: linear_issue_id: APP-52
-Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
-Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
-Constraints: Use Playwright skill and playwright-cli first. If missing, install both first. Use Chrome DevTools MCP when failures need console/network evidence. No source code changes.
-Output: /reports/FRONTEND_TEST_REPORT.md
-```
-
-### Expected Output
-```text
-Creates /reports/FRONTEND_TEST_REPORT.md with preflight section plus scenario outcomes.
-If issue is not in testing-ready state, exits early as NOT_READY before executing flows.
-Failures include exact repro steps, evidence references, severity, and next action.
-Blocked scenarios are clearly marked with reason.
-```
-
-## Example 3: Deep Diagnostics for Intermittent UI Failure
-
-### Input
-```text
-Agent: frontend-tester
-Goal: Investigate intermittent checkout button freeze observed in staging.
+Goal: Investigate intermittent checkout-button freeze in staging.
+Inputs: task_identifier: SHOP-342
 Inputs: Target URL/environment: https://staging.shop.example
-Inputs: Key user flows to validate: cart update, checkout submit, payment redirect.
-Inputs: Credentials or test account details: use qa_checkout_user from team vault.
-Inputs: linear_issue_id: SHOP-342
-Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
-Inputs: worktree_policy_path: /Users/slobodan/Projects/Agents/agents/_shared/WORKTREE_POLICY.md
-Constraints: Use Playwright skill and playwright-cli first. If flow fails or is flaky, use Chrome DevTools MCP to capture console and network diagnostics. No source code changes.
-Output: /reports/FRONTEND_TEST_REPORT.md
+Inputs: Key user flows to validate: cart update, checkout submit, payment redirect
+Inputs: Credentials or test account details: use qa_checkout_user from team vault
+Inputs: tracking_mode: local
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: packet_type: TEST_TASK
+Inputs: local_issue_dir: /workspace/shop-web/reports/issues/SHOP-342/
+Inputs: local_state_path: /workspace/shop-web/reports/issues/SHOP-342/state.yaml
+Inputs: local_events_path: /workspace/shop-web/reports/issues/SHOP-342/events.jsonl
+Constraints: Consume local TEST_TASK packet. If flaky behavior appears, include console/network diagnostics in report and structured blocked outcome when unresolved.
+Output: /reports/issues/<task_identifier>/FRONTEND_TEST_REPORT.md and structured outcome.
 ```
 
 ### Expected Output
 ```text
-Standard Playwright run is attempted first.
-If Linear readiness checks fail, run is skipped and marked NOT_READY.
-If failure is reproduced, report includes DevTools console/network findings tied to the exact failed step.
-Flaky results are labeled clearly and include suggested next debugging action.
+Reads local TEST_TASK packet and local readiness state.
+Runs Playwright scenarios and gathers evidence.
+Writes issue-scoped report with failure diagnostics.
+Appends structured blocked or ready_for_review event to local events.jsonl.
 ```

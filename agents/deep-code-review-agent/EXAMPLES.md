@@ -1,75 +1,65 @@
 # Examples
 
-Use these as starting points. Review them carefully and adapt scope, module priorities, and constraints to your own repository and risk profile.
+Use these as starting points. Adapt scope, module priorities, and risk themes to your repository.
 
-## Example 1: Full Deep Review of a Large Monorepo
+## Example 1: Linear Mode Full Deep Review from REVIEW_TASK Packet
 
 ### Input
 ```text
 Agent: deep-code-review-agent
-Goal: Run a deep code review of the monorepo after a long period without full-project review.
+Goal: Run deep review of commerce monorepo after long review gap.
 Mode: Full Review
+Inputs: task_identifier: COM-900
 Inputs: Repository root path: ./repo/commerce-monorepo
-Inputs: Existing report path (required for Re-review): /reports/REVIEW_TASKS.md
+Inputs: Existing report path (required for Re-review): /reports/issues/<task_identifier>/REVIEW_TASKS.md
 Inputs: Optional focus modules or risk themes: checkout, inventory sync, shared auth middleware
-Constraints: Read-only review. No code changes.
-Output: /reports/REVIEW_TASKS.md with executive summary, top 10 urgent fixes, quick wins, prioritized tasks (P0-P3), needs manual verification, out-of-scope, and verification steps per task.
+Inputs: tracking_mode: linear
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: linear_issue_id: COM-900
+Inputs: linear_workflow_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_WORKFLOW.md
+Inputs: packet_type: REVIEW_TASK
+Inputs: local_issue_dir: /workspace/commerce-monorepo/reports/issues/COM-900/
+Inputs: local_state_path: /workspace/commerce-monorepo/reports/issues/COM-900/state.yaml
+Inputs: local_events_path: /workspace/commerce-monorepo/reports/issues/COM-900/events.jsonl
+Constraints: Read-only review. Consume latest REVIEW_TASK packet. Publish structured review outcome event.
+Output: /reports/issues/<task_identifier>/REVIEW_TASKS.md with executive summary, top 10, quick wins, prioritized tasks, needs-manual-verification, and out-of-scope.
 ```
 
 ### Expected Output
 ```text
-Creates /reports/REVIEW_TASKS.md.
-Includes Executive Summary, Top 10 Urgent Fixes, Quick Wins, Tasks by Priority (P0-P3), Needs Manual Verification, and Out-of-Scope.
-Findings are deduplicated by root cause and fix path.
-Each task includes task ID, priority, title, impact, evidence (file + line), recommended fix, estimated effort (S/M/L/XL), confidence (high/medium/low), status (OPEN/RESOLVED/REOPENED/NEEDS_MANUAL_VERIFICATION), and verification steps.
-Top 10 and Quick Wins reference tasks by ID (for example, [P0-1], [P1-2]) and those IDs match the detailed task blocks.
-Large-repo chunking is visible in the report (module/phase review coverage).
+Reads latest REVIEW_TASK packet from issue comments.
+Writes /reports/issues/COM-900/REVIEW_TASKS.md with P0-P3 tasks and stable task IDs.
+Deduplicates findings and preserves evidence references.
+Posts structured review outcome event to Linear.
 ```
 
-### Sample Task List + Detail Snippet
-```md
-## Top 10 Urgent Fixes
-1. [P0-1] Rotate exposed payment secret.
-2. [P0-2] Enforce authorization on refund endpoint.
-
-## Tasks by Priority
-
-### P0
-
-#### Task P0-1
-- **Task ID:** P0-1
-- **Priority:** P0
-- **Title:** Rotate exposed payment secret
-- **Impact:** Credential abuse can lead to fraudulent transactions.
-- **Evidence:** `services/payments/config.ts:22`
-- **Recommended Fix:** Rotate the secret and migrate to secure runtime secret injection.
-- **Estimated Effort:** M
-- **Confidence:** high
-- **Status:** OPEN
-- **Verification Steps:** Confirm old secret is revoked and related integration tests pass.
-```
-
-## Example 2: Re-review of Resolved Tasks Only
+## Example 2: Local Mode Re-review of Resolved Tasks
 
 ### Input
 ```text
 Agent: deep-code-review-agent
-Goal: Validate whether previously resolved high-priority tasks are truly fixed.
+Goal: Validate whether previously resolved P0/P1 tasks are truly fixed.
 Mode: Re-review
+Inputs: task_identifier: COM-900
 Inputs: Repository root path: ./repo/commerce-monorepo
-Inputs: Existing report path (required for Re-review): /reports/REVIEW_TASKS.md
-Inputs: Optional focus modules or risk themes: only tasks marked RESOLVED in P0 and P1
-Constraints: Read-only review. No code changes.
-Output: /reports/REVIEW_TASKS.md updated with re-review outcomes for RESOLVED tasks.
+Inputs: Existing report path (required for Re-review): /reports/issues/<task_identifier>/REVIEW_TASKS.md
+Inputs: Optional focus modules or risk themes: resolved tasks in checkout + auth
+Inputs: tracking_mode: local
+Inputs: tracking_contract_path: /Users/slobodan/Projects/Agents/agents/_shared/TRACKING_MODE_CONTRACT.md
+Inputs: linear_comment_schema_path: /Users/slobodan/Projects/Agents/agents/_shared/LINEAR_COMMENT_SCHEMA.md
+Inputs: packet_type: REVIEW_TASK
+Inputs: local_issue_dir: /workspace/commerce-monorepo/reports/issues/COM-900/
+Inputs: local_state_path: /workspace/commerce-monorepo/reports/issues/COM-900/state.yaml
+Inputs: local_events_path: /workspace/commerce-monorepo/reports/issues/COM-900/events.jsonl
+Constraints: Read-only review. Re-review only tasks marked RESOLVED. Preserve task IDs.
+Output: /reports/issues/<task_identifier>/REVIEW_TASKS.md with re-review outcomes and structured local outcome event.
 ```
 
 ### Expected Output
 ```text
-Inspects only tasks marked RESOLVED in /reports/REVIEW_TASKS.md.
-Marks each as RESOLVED, REOPENED, or NEEDS_MANUAL_VERIFICATION.
-Attaches file+line evidence for each re-review decision.
-References each re-reviewed item by its existing task ID (for example, P0-1, P1-4).
-Preserves existing task IDs without renumbering.
-Does not create new feature requests outside the RESOLVED-task validation scope.
-Preserves read-only review behavior.
+Reads local REVIEW_TASK packet and existing issue-scoped report.
+Re-evaluates only RESOLVED tasks and preserves existing IDs.
+Writes updated /reports/issues/COM-900/REVIEW_TASKS.md.
+Appends structured review outcome event to local events.jsonl.
 ```
