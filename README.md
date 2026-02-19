@@ -15,6 +15,14 @@ Instead, this repo stores:
 - Make onboarding simple for programmers new to agents
 - Capture standards so future agents are consistent and useful
 
+## Usage with agentic AI
+Inside whatever tool you are using find the personalisation settings and add this or a similar prompt:
+"
+I have an entire project used for managing agents I created for use with your workflow. If I specify an agent you can find it under this root directory APSOLUTE_PATH_TO_WHERE_YOU_CLONED_AGENTS_REPO each agent definition is inside subfolder and a README.md and there are examples of agents input and output where possible. Files named TEMPLATES.md are used to generate structured prompts by you or me, I use the blank templates and fill them in.
+If I ask you to make a prompt for an agent you should figure out what agent I mean because I will sometimes say orchestrator agent when i mean sprint-orchestrator-agent etc. You should always generate prompts using the template format for that agent so it is clear what agent is being used and the agent gets everithing it needs. 
+
+When working as one of my agents pay attention to the agents/_shared folder and its instructions.
+""
 ## Folder Structure
 
 ```text
