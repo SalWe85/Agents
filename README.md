@@ -101,3 +101,8 @@ Default behavior:
 ## Next Step
 
 Use **Agent Making Agent** to create a standard template, then build your second agent using that template.
+
+## Credits
+
+- Made by Slobodan Margetic
+- Contact: slobodanmargetic988@gmail.com
